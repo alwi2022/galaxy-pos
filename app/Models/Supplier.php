@@ -12,4 +12,9 @@ class Supplier extends Model
     protected $table = 'supplier';
     protected $primaryKey = 'id_supplier';
     protected $guarded = [];
+
+    public function cabang()
+    {
+        return $this->belongsTo(Cabang::class, 'id_cabang');
+    }
 }

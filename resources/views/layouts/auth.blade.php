@@ -1,3 +1,4 @@
+<!-- resources/views/layouts/auth.blade.php -->
 <!DOCTYPE html>
 <html>
 <head>

@@ -6,6 +6,10 @@ use App\Models\Kategori;
 use Illuminate\Http\Request;
 use App\Models\Produk;
 use PDF;
+use DNS1D;
+use TCPDF;
+
+
 
 class ProdukController extends Controller
 {
@@ -16,7 +20,9 @@ class ProdukController extends Controller
      */
     public function index()
     {
-        $kategori = Kategori::all()->pluck('nama_kategori', 'id_kategori');
+        $kategori = Kategori::where('id_cabang', auth()->user()->id_cabang)
+        ->pluck('nama_kategori', 'id_kategori');
+
 
         return view('produk.index', compact('kategori'));
     }
@@ -25,7 +31,8 @@ class ProdukController extends Controller
     {
         $produk = Produk::leftJoin('kategori', 'kategori.id_kategori', 'produk.id_kategori')
             ->select('produk.*', 'nama_kategori')
-            // ->orderBy('kode_produk', 'asc')
+            ->where('produk.id_cabang', auth()->user()->id_cabang)
+
             ->get();
 
         return datatables()
@@ -80,10 +87,10 @@ class ProdukController extends Controller
     {
         $produk = Produk::latest()->first() ?? new Produk();
         $request['kode_produk'] = 'P'. tambah_nol_didepan((int)$produk->id_produk +1, 6);
-
+        $request['id_cabang'] = auth()->user()->id_cabang;
         $produk = Produk::create($request->all());
 
-        return response()->json('Data berhasil disimpan', 200);
+        return back()->with('success', 'Data berhasil disimpan');
     }
 
     /**
@@ -120,9 +127,10 @@ class ProdukController extends Controller
     public function update(Request $request, $id)
     {
         $produk = Produk::find($id);
+        $produk->id_cabang = auth()->user()->id_cabang;
         $produk->update($request->all());
 
-        return response()->json('Data berhasil disimpan', 200);
+        return back()->with('success', 'Data berhasil disimpan');
     }
 
     /**
@@ -136,7 +144,7 @@ class ProdukController extends Controller
         $produk = Produk::find($id);
         $produk->delete();
 
-        return response(null, 204);
+        return back()->with('success', 'Data berhasil dihapus');
     }
 
     public function deleteSelected(Request $request)
@@ -146,7 +154,7 @@ class ProdukController extends Controller
             $produk->delete();
         }
 
-        return response(null, 204);
+        return back()->with('success', 'Data berhasil dihapus');
     }
 
     public function cetakBarcode(Request $request)
@@ -157,9 +165,80 @@ class ProdukController extends Controller
             $dataproduk[] = $produk;
         }
 
-        $no  = 1;
-        $pdf = PDF::loadView('produk.barcode', compact('dataproduk', 'no'));
-        $pdf->setPaper('a4', 'potrait');
-        return $pdf->stream('produk.pdf');
+        // Create new PDF document
+        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+        // Set document information
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('Your App');
+        $pdf->SetTitle('Barcode Products');
+
+        // Remove default header/footer
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
+        // Set margins
+        $pdf->SetMargins(10, 10, 10);
+
+        // Add a page
+        $pdf->AddPage();
+
+        // Set font
+        $pdf->SetFont('helvetica', '', 10);
+
+        $x = 10;
+        $y = 10;
+        $counter = 0;
+
+        foreach ($dataproduk as $produk) {
+            // Product name
+            $pdf->SetXY($x, $y);
+            $pdf->Cell(60, 10, $produk->nama_produk, 1, 0, 'C');
+            
+            // Price
+            $pdf->SetXY($x, $y + 10);
+            $pdf->Cell(60, 10, 'Rp. ' . format_uang($produk->harga_jual), 1, 0, 'C');
+            
+            // Barcode
+            $pdf->SetXY($x, $y + 20);
+            $style = array(
+                'position' => '',
+                'align' => 'C',
+                'stretch' => false,
+                'fitwidth' => true,
+                'cellfitscale' => false,
+                'border' => true,
+                'hpadding' => 'auto',
+                'vpadding' => 'auto',
+                'fgcolor' => array(0,0,0),
+                'bgcolor' => false,
+                'text' => true,
+                'font' => 'helvetica',
+                'fontsize' => 8,
+                'stretchtext' => 4
+            );
+            
+            $pdf->write1DBarcode($produk->kode_produk, 'C39', '', '', 60, 15, 0.4, $style, 'N');
+            
+            $counter++;
+            if ($counter % 3 == 0) {
+                $x = 10;
+                $y += 50;
+            } else {
+                $x += 65;
+            }
+            
+            // New page if needed
+            if ($y > 250) {
+                $pdf->AddPage();
+                $x = 10;
+                $y = 10;
+            }
+        }
+
+        return response($pdf->Output('barcode.pdf', 'S'))
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="barcode.pdf"');
     }
+
 }

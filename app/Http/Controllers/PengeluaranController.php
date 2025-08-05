@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+// app/Http/Controllers/PengeluaranController.php
 
 use Illuminate\Http\Request;
 use App\Models\Pengeluaran;
@@ -14,7 +15,9 @@ class PengeluaranController extends Controller
 
     public function data()
     {
-        $pengeluaran = Pengeluaran::orderBy('id_pengeluaran', 'desc')->get();
+        $pengeluaran = Pengeluaran::where('id_cabang', auth()->user()->id_cabang)
+            ->orderBy('id_pengeluaran', 'desc')
+            ->get();
 
         return datatables()
             ->of($pengeluaran)
@@ -55,7 +58,11 @@ class PengeluaranController extends Controller
      */
     public function store(Request $request)
     {
-        $pengeluaran = Pengeluaran::create($request->all());
+        $pengeluaran = new Pengeluaran();
+        $pengeluaran->fill($request->all());
+        $pengeluaran->id_cabang = auth()->user()->id_cabang;
+        $pengeluaran->save();
+        
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -93,7 +100,12 @@ class PengeluaranController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $pengeluaran = Pengeluaran::find($id)->update($request->all());
+        $pengeluaran = Pengeluaran::where('id_pengeluaran', $id)
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->firstOrFail();
+    
+    $pengeluaran->update($request->all());
+    
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -106,7 +118,11 @@ class PengeluaranController extends Controller
      */
     public function destroy($id)
     {
-        $pengeluaran = Pengeluaran::find($id)->delete();
+        $pengeluaran = Pengeluaran::where('id_pengeluaran', $id)
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->firstOrFail();
+    
+    $pengeluaran->delete();
 
         return response(null, 204);
     }

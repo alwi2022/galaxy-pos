@@ -30,7 +30,7 @@
         @media print {
             @page {
                 margin: 0;
-                size: 75mm 
+                size: 75mm ;
     ';
     ?>
     <?php 

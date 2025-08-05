@@ -12,4 +12,8 @@ class Kategori extends Model
     protected $table = 'kategori';
     protected $primaryKey = 'id_kategori';
     protected $guarded = [];
+
+    public function cabang() {
+        return $this->belongsTo(Cabang::class, 'id_cabang');
+    }
 }

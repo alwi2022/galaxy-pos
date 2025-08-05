@@ -1,4 +1,5 @@
 <?php
+// config/fortify.php
 
 use App\Providers\RouteServiceProvider;
 use Laravel\Fortify\Features;

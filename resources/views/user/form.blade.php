@@ -1,3 +1,4 @@
+<!-- resources/views/user/form.blade.php -->
 <div class="modal fade" id="modal-form" tabindex="-1" role="dialog" aria-labelledby="modal-form">
     <div class="modal-dialog modal-lg" role="document">
         <form action="" method="post" class="form-horizontal">
@@ -34,6 +35,28 @@
                             <span class="help-block with-errors"></span>
                         </div>
                     </div>
+                    <div class="form-group row">
+    <label for="level" class="col-lg-3 col-lg-offset-1 control-label">Level</label>
+    <div class="col-lg-6">
+        <select name="level" id="level" class="form-control" required>
+            <option value="2">Kasir</option>
+            <option value="3">Teknisi</option>
+        </select>
+    </div>
+</div>
+
+
+                    <div class="form-group row">
+    <label for="id_cabang" class="col-lg-3 col-lg-offset-1 control-label">Cabang</label>
+    <div class="col-lg-6">
+        <select name="id_cabang" id="id_cabang" class="form-control" required>
+            @foreach (\App\Models\Cabang::all() as $cabang)
+                <option value="{{ $cabang->id_cabang }}">{{ $cabang->nama_cabang }}</option>
+            @endforeach
+        </select>
+    </div>
+</div>
+
                     <div class="form-group row">
                         <label for="password_confirmation" class="col-lg-3 col-lg-offset-1 control-label">Konfirmasi Password</label>
                         <div class="col-lg-6">

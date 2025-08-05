@@ -160,10 +160,10 @@
             dom: 'Brt',
             bSort: false,
             paginate: false
-        })
-        .on('draw.dt', function () {
+        }).on('draw.dt', function () {
             loadForm($('#diskon').val());
         });
+
         table2 = $('.table-produk').DataTable();
 
         $(document).on('input', '.quantity', function () {
@@ -172,29 +172,45 @@
 
             if (jumlah < 1) {
                 $(this).val(1);
-                alert('Jumlah tidak boleh kurang dari 1');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Jumlah tidak boleh kurang dari 1',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
                 return;
             }
+
             if (jumlah > 10000) {
                 $(this).val(10000);
-                alert('Jumlah tidak boleh lebih dari 10000');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Jumlah tidak boleh lebih dari 10000',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
                 return;
             }
 
             $.post(`{{ url('/pembelian_detail') }}/${id}`, {
-                    '_token': $('[name=csrf-token]').attr('content'),
-                    '_method': 'put',
-                    'jumlah': jumlah
-                })
-                .done(response => {
-                    $(this).on('mouseout', function () {
-                        table.ajax.reload(() => loadForm($('#diskon').val()));
-                    });
-                })
-                .fail(errors => {
-                    alert('Tidak dapat menyimpan data');
-                    return;
+                '_token': $('[name=csrf-token]').attr('content'),
+                '_method': 'put',
+                'jumlah': jumlah
+            })
+            .done(response => {
+                $(this).on('mouseout', function () {
+                    table.ajax.reload(() => loadForm($('#diskon').val()));
                 });
+            })
+            .fail(errors => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: 'Tidak dapat menyimpan data',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            });
         });
 
         $(document).on('input', '#diskon', function () {
@@ -232,25 +248,53 @@
                 table.ajax.reload(() => loadForm($('#diskon').val()));
             })
             .fail(errors => {
-                alert('Tidak dapat menyimpan data');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: 'Tidak dapat menyimpan data',
+                    confirmButtonText: 'OK'
+                });
                 return;
             });
     }
 
     function deleteData(url) {
-        if (confirm('Yakin ingin menghapus data terpilih?')) {
-            $.post(url, {
+        Swal.fire({
+            title: 'Hapus Data?',
+            text: 'Yakin ingin menghapus data terpilih?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post(url, {
                     '_token': $('[name=csrf-token]').attr('content'),
                     '_method': 'delete'
                 })
                 .done((response) => {
                     table.ajax.reload(() => loadForm($('#diskon').val()));
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Data berhasil dihapus.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
                 })
                 .fail((errors) => {
-                    alert('Tidak dapat menghapus data');
-                    return;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: 'Tidak dapat menghapus data',
+                        confirmButtonText: 'OK'
+                    });
                 });
-        }
+            }
+        });
     }
 
     function loadForm(diskon = 0) {
@@ -259,16 +303,21 @@
 
         $.get(`{{ url('/pembelian_detail/loadform') }}/${diskon}/${$('.total').text()}`)
             .done(response => {
-                $('#totalrp').val('Rp. '+ response.totalrp);
-                $('#bayarrp').val('Rp. '+ response.bayarrp);
+                $('#totalrp').val('Rp. ' + response.totalrp);
+                $('#bayarrp').val('Rp. ' + response.bayarrp);
                 $('#bayar').val(response.bayar);
-                $('.tampil-bayar').text('Rp. '+ response.bayarrp);
+                $('.tampil-bayar').text('Rp. ' + response.bayarrp);
                 $('.tampil-terbilang').text(response.terbilang);
             })
             .fail(errors => {
-                alert('Tidak dapat menampilkan data');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: 'Tidak dapat menampilkan data',
+                    confirmButtonText: 'OK'
+                });
                 return;
-            })
+            });
     }
 </script>
 @endpush

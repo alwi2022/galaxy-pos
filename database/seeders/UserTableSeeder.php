@@ -20,15 +20,26 @@ class UserTableSeeder extends Seeder
                 'email' => 'admin@gmail.com',
                 'password' => bcrypt('123'),
                 'foto' => '/img/user.jpg',
-                'level' => 1
+                'level' => 1,
+                'id_cabang' => 1,
             ],
             [
                 'name' => 'Kasir 1',
                 'email' => 'kasir1@gmail.com',
                 'password' => bcrypt('123'),
                 'foto' => '/img/user.jpg',
-                'level' => 2
-            ]
+                'level' => 2,
+                'id_cabang' => 1,
+            ],
+            [
+                'name' => 'Teknisi 1',
+                'email' => 'teknisi1@gmail.com',
+                'password' => bcrypt('123'),
+                'foto' => '/img/user.jpg',
+                'level' => 3,
+                'id_cabang' => 1,
+            ],
+
         );
 
         array_map(function (array $user) {

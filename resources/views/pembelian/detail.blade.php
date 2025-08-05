@@ -1,3 +1,4 @@
+<!-- resources/views/pembelian/detail.blade.php -->
 <div class="modal fade" id="modal-detail" tabindex="-1" role="dialog" aria-labelledby="modal-detail">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">

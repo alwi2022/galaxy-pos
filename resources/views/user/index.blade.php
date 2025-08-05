@@ -1,3 +1,4 @@
+<!-- resources/views/user/index.blade.php -->
 @extends('layouts.master')
 
 @section('title')
@@ -53,20 +54,24 @@
                 {data: 'aksi', searchable: false, sortable: false},
             ]
         });
-
         $('#modal-form').validator().on('submit', function (e) {
-            if (! e.preventDefault()) {
-                $.post($('#modal-form form').attr('action'), $('#modal-form form').serialize())
-                    .done((response) => {
-                        $('#modal-form').modal('hide');
-                        table.ajax.reload();
-                    })
-                    .fail((errors) => {
-                        alert('Tidak dapat menyimpan data');
-                        return;
-                    });
-            }
-        });
+    if (!e.preventDefault()) {
+        $.post($('#modal-form form').attr('action'), $('#modal-form form').serialize())
+            .done((response) => {
+                $('#modal-form').modal('hide');
+                table.ajax.reload();
+            })
+            .fail((errors) => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Tidak dapat menyimpan data',
+                });
+            });
+    }
+});
+
+
     });
 
     function addForm(url) {
@@ -82,41 +87,65 @@
     }
 
     function editForm(url) {
-        $('#modal-form').modal('show');
-        $('#modal-form .modal-title').text('Edit User');
+    $('#modal-form').modal('show');
+    $('#modal-form .modal-title').text('Edit User');
 
-        $('#modal-form form')[0].reset();
-        $('#modal-form form').attr('action', url);
-        $('#modal-form [name=_method]').val('put');
-        $('#modal-form [name=name]').focus();
+    $('#modal-form form')[0].reset();
+    $('#modal-form form').attr('action', url);
+    $('#modal-form [name=_method]').val('put');
+    $('#modal-form [name=name]').focus();
 
-        $('#password, #password_confirmation').attr('required', false);
+    $('#password, #password_confirmation').attr('required', false);
 
-        $.get(url)
-            .done((response) => {
-                $('#modal-form [name=name]').val(response.name);
-                $('#modal-form [name=email]').val(response.email);
-            })
-            .fail((errors) => {
-                alert('Tidak dapat menampilkan data');
-                return;
+    $.get(url)
+        .done((response) => {
+            $('#modal-form [name=name]').val(response.name);
+            $('#modal-form [name=email]').val(response.email);
+            $('#modal-form [name=level]').val(response.level).trigger('change');
+            $('#modal-form [name=id_cabang]').val(response.id_cabang).trigger('change');
+        })
+        .fail((errors) => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Tidak dapat menampilkan data',
             });
-    }
+        });
+}
 
-    function deleteData(url) {
-        if (confirm('Yakin ingin menghapus data terpilih?')) {
+function deleteData(url) {
+    Swal.fire({
+        title: 'Apakah kamu yakin?',
+        text: 'Yakin ingin menghapus data terpilih?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
             $.post(url, {
                     '_token': $('[name=csrf-token]').attr('content'),
                     '_method': 'delete'
                 })
                 .done((response) => {
                     table.ajax.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Data berhasil dihapus',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
                 })
                 .fail((errors) => {
-                    alert('Tidak dapat menghapus data');
-                    return;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Tidak dapat menghapus data',
+                    });
                 });
         }
-    }
+    });
+}
 </script>
 @endpush

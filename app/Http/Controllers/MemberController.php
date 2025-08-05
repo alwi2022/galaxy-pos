@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+// app/Http/Controllers/MemberController.php
 
 use App\Models\Member;
 use App\Models\Setting;
@@ -21,7 +22,9 @@ class MemberController extends Controller
 
     public function data()
     {
-        $member = Member::orderBy('kode_member')->get();
+        $member = Member::where('id_cabang', auth()->user()->id_cabang)
+        ->orderBy('kode_member')
+        ->get();
 
         return datatables()
             ->of($member)
@@ -72,6 +75,7 @@ class MemberController extends Controller
         $member->nama = $request->nama;
         $member->telepon = $request->telepon;
         $member->alamat = $request->alamat;
+        $member->id_cabang = auth()->user()->id_cabang;
         $member->save();
 
         return response()->json('Data berhasil disimpan', 200);
@@ -110,7 +114,11 @@ class MemberController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $member = Member::find($id)->update($request->all());
+        $member = Member::where('id_member', $id)
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->firstOrFail();
+    
+    $member->update($request->all());
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -123,8 +131,12 @@ class MemberController extends Controller
      */
     public function destroy($id)
     {
-        $member = Member::find($id);
-        $member->delete();
+        $member = Member::where('id_member', $id)
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->firstOrFail();
+    
+    $member->delete();
+    
 
         return response(null, 204);
     }
@@ -133,8 +145,11 @@ class MemberController extends Controller
     {
         $datamember = collect(array());
         foreach ($request->id_member as $id) {
-            $member = Member::find($id);
-            $datamember[] = $member;
+            $member = Member::where('id_member', $id)
+                ->where('id_cabang', auth()->user()->id_cabang)
+                ->first();
+        
+            if ($member) $datamember[] = $member;
         }
 
         $datamember = $datamember->chunk(2);

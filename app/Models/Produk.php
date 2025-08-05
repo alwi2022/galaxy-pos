@@ -12,4 +12,11 @@ class Produk extends Model
     protected $table = 'produk';
     protected $primaryKey = 'id_produk';
     protected $guarded = [];
+
+    public function cabang() {
+        return $this->belongsTo(Cabang::class, 'id_cabang');
+    }
+    
+    
+
 }

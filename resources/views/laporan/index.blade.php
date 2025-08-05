@@ -1,3 +1,4 @@
+<!-- resources/views/laporan/index.blade.php -->
 @extends('layouts.master')
 
 @section('title')
@@ -22,15 +23,18 @@
                 <a href="{{ route('laporan.export_pdf', [$tanggalAwal, $tanggalAkhir]) }}" target="_blank" class="btn btn-success btn-xs btn-flat"><i class="fa fa-file-excel-o"></i> Export PDF</a>
             </div>
             <div class="box-body table-responsive">
+                
                 <table class="table table-stiped table-bordered">
-                    <thead>
-                        <th width="5%">No</th>
-                        <th>Tanggal</th>
-                        <th>Penjualan</th>
-                        <th>Pembelian</th>
-                        <th>Pengeluaran</th>
-                        <th>Pendapatan</th>
-                    </thead>
+                <thead>
+    <th width="5%">No</th>
+    <th>Tanggal</th>
+    <th>Penjualan</th>
+    <th>Pembelian</th>
+    <th>Pengeluaran</th>
+    <th>Servis</th>
+    <th>Pendapatan</th>
+</thead>
+
                 </table>
             </div>
         </div>
@@ -55,13 +59,15 @@
                 url: '{{ route('laporan.data', [$tanggalAwal, $tanggalAkhir]) }}',
             },
             columns: [
-                {data: 'DT_RowIndex', searchable: false, sortable: false},
-                {data: 'tanggal'},
-                {data: 'penjualan'},
-                {data: 'pembelian'},
-                {data: 'pengeluaran'},
-                {data: 'pendapatan'}
-            ],
+    {data: 'DT_RowIndex', searchable: false, sortable: false},
+    {data: 'tanggal'},
+    {data: 'penjualan'},
+    {data: 'pembelian'},
+    {data: 'pengeluaran'},
+    {data: 'servis'},
+    {data: 'pendapatan'}
+],
+
             dom: 'Brt',
             bSort: false,
             bPaginate: false,

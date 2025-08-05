@@ -1,7 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
+// app/Http/Controllers/SupplierController.php
 
+use App\Models\Cabang;
 use Illuminate\Http\Request;
 use App\Models\Supplier;
 
@@ -14,7 +16,9 @@ class SupplierController extends Controller
 
     public function data()
     {
-        $supplier = Supplier::orderBy('id_supplier', 'desc')->get();
+        $supplier = Supplier::where('id_cabang', auth()->user()->id_cabang)
+        ->orderBy('id_supplier', 'desc')
+        ->get();
 
         return datatables()
             ->of($supplier)
@@ -49,7 +53,9 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
+        $request['id_cabang'] = auth()->user()->id_cabang;
         $supplier = Supplier::create($request->all());
+        
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -87,7 +93,12 @@ class SupplierController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $supplier = Supplier::find($id)->update($request->all());
+        $supplier = Supplier::where('id_supplier', $id)
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->firstOrFail();
+    
+    $supplier->update($request->all());
+    
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -100,7 +111,11 @@ class SupplierController extends Controller
      */
     public function destroy($id)
     {
-        $supplier = Supplier::find($id)->delete();
+        $supplier = Supplier::where('id_supplier', $id)
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->firstOrFail();
+    
+    $supplier->delete();
 
         return response(null, 204);
     }

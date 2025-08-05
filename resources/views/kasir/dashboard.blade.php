@@ -1,3 +1,4 @@
+<!-- resources/views/kasir/dashboard.blade.php -->
 @extends('layouts.master')
 
 @section('title')

@@ -19,7 +19,10 @@ class KategoriController extends Controller
 
     public function data()
     {
-        $kategori = Kategori::orderBy('id_kategori', 'desc')->get();
+        $kategori = Kategori::where('id_cabang', auth()->user()->id_cabang)
+        ->orderBy('id_kategori', 'desc')
+        ->get();
+
 
         return datatables()
             ->of($kategori)
@@ -56,9 +59,10 @@ class KategoriController extends Controller
     {
         $kategori = new Kategori();
         $kategori->nama_kategori = $request->nama_kategori;
+        $kategori->id_cabang = auth()->user()->id_cabang;
         $kategori->save();
 
-        return response()->json('Data berhasil disimpan', 200);
+        return back()->with('success', 'Data berhasil disimpan');
     }
 
     /**

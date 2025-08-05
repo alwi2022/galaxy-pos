@@ -1,3 +1,4 @@
+<!-- resources/views/layouts/master.blade.php -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,6 +10,9 @@
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 
     <link rel="icon" href="{{ url($setting->path_logo) }}" type="image/png">
+
+    <!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
     <!-- Bootstrap 3.3.7 -->
     <link rel="stylesheet" href="{{ asset('/AdminLTE-2/bower_components/bootstrap/dist/css/bootstrap.min.css') }}">
@@ -84,6 +88,9 @@
     <script src="{{ asset('AdminLTE-2/dist/js/adminlte.min.js') }}"></script>
     <!-- Validator -->
     <script src="{{ asset('js/validator.min.js') }}"></script>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <script>
         function preview(selector, temporaryFile, width = 200)  {
@@ -91,6 +98,37 @@
             $(selector).append(`<img src="${window.URL.createObjectURL(temporaryFile)}" width="${width}">`);
         }
     </script>
+
+@if (session('success'))
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Sukses',
+        text: '{{ session('success') }}'
+    });
+</script>
+@endif
+
+@if (session('error'))
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: '{{ session('error') }}'
+    });
+</script>
+@endif
+
+@if (session('alert'))
+<script>
+    Swal.fire({
+        icon: 'warning', 
+        title: 'Informasi',
+        text: '{{ session('alert') }}',
+        confirmButtonText: 'OK'
+    });
+</script>
+@endif
     @stack('scripts')
 </body>
 </html>

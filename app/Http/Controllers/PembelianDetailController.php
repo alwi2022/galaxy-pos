@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\Pembelian;
 use App\Models\PembelianDetail;
 use App\Models\Produk;
@@ -13,8 +14,11 @@ class PembelianDetailController extends Controller
     public function index()
     {
         $id_pembelian = session('id_pembelian');
-        $produk = Produk::orderBy('nama_produk')->get();
-        $supplier = Supplier::find(session('id_supplier'));
+        $produk = Produk::orderBy('nama_produk')
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->get();
+        $supplier = Supplier::where('id_cabang', auth()->user()->id_cabang)
+            ->find(session('id_supplier'));
         $diskon = Pembelian::find($id_pembelian)->diskon ?? 0;
 
         if (! $supplier) {
@@ -27,8 +31,12 @@ class PembelianDetailController extends Controller
     public function data($id)
     {
         $detail = PembelianDetail::with('produk')
-            ->where('id_pembelian', $id)
-            ->get();
+        ->where('id_pembelian', $id)
+        ->whereHas('pembelian', function ($q) {
+            $q->where('id_cabang', auth()->user()->id_cabang);
+        })
+        ->get();
+    
         $data = array();
         $total = 0;
         $total_item = 0;
@@ -68,7 +76,10 @@ class PembelianDetailController extends Controller
 
     public function store(Request $request)
     {
-        $produk = Produk::where('id_produk', $request->id_produk)->first();
+        $produk = Produk::where('id_produk', $request->id_produk)
+            ->where('id_cabang', auth()->user()->id_cabang)
+            ->first();
+
         if (! $produk) {
             return response()->json('Data gagal disimpan', 400);
         }
@@ -81,7 +92,7 @@ class PembelianDetailController extends Controller
         $detail->subtotal = $produk->harga_beli;
         $detail->save();
 
-        return response()->json('Data berhasil disimpan', 200);
+        return back()->with('success', 'Data berhasil disimpan');
     }
 
     public function update(Request $request, $id)

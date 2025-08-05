@@ -91,6 +91,12 @@ return [
             'prefix_indexes' => true,
         ],
 
+        'dump' => [
+            'dump_binary_path' => 'C:/xampp/mysql/bin', // TANPA SLASH TERAKHIR
+            'use_single_transaction' => true,
+            'timeout' => 60, // detik
+        ],
+
     ],
 
     /*

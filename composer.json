@@ -20,6 +20,10 @@
         "laravel/tinker": "^2.5",
         "livewire/livewire": "^2.0",
         "milon/barcode": "^8.0",
+        "picqer/php-barcode-generator": "^3.2",
+        "simplesoftwareio/simple-qrcode": "^4.2",
+        "spatie/laravel-backup": "^7.8",
+        "tecnickcom/tcpdf": "^6.10",
         "yajra/laravel-datatables-oracle": "~9.0"
     },
     "require-dev": {

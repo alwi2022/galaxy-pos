@@ -1,3 +1,4 @@
+<!-- resources/views/laporan/pdf.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,6 +25,7 @@
                 <th>Penjualan</th>
                 <th>Pembelian</th>
                 <th>Pengeluaran</th>
+                <th>Servis</th>
                 <th>Pendapatan</th>
             </tr>
         </thead>

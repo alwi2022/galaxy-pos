@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+// app/Http/Controllers/PenjualanDetailController.php
 
 use App\Models\Member;
 use App\Models\Penjualan;
@@ -13,8 +14,14 @@ class PenjualanDetailController extends Controller
 {
     public function index()
     {
-        $produk = Produk::orderBy('nama_produk')->get();
-        $member = Member::orderBy('nama')->get();
+        $produk = Produk::orderBy('nama_produk')
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->get();
+    
+    $member = Member::orderBy('nama')
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->get();
+    
         $diskon = Setting::first()->diskon ?? 0;
 
         // Cek apakah ada transaksi yang sedang berjalan
@@ -27,7 +34,7 @@ class PenjualanDetailController extends Controller
             if (auth()->user()->level == 1) {
                 return redirect()->route('transaksi.baru');
             } else {
-                return redirect()->route('home');
+                return redirect()->route('dashboard')->with('alert', 'Tidak ada transaksi aktif. Silakan mulai transaksi baru terlebih dahulu.');
             }
         }
     }
@@ -35,8 +42,11 @@ class PenjualanDetailController extends Controller
     public function data($id)
     {
         $detail = PenjualanDetail::with('produk')
-            ->where('id_penjualan', $id)
-            ->get();
+        ->where('id_penjualan', $id)
+        ->whereHas('penjualan', function ($q) {
+            $q->where('id_cabang', auth()->user()->id_cabang);
+        })
+        ->get();
 
         $data = array();
         $total = 0;
@@ -77,9 +87,83 @@ class PenjualanDetailController extends Controller
             ->make(true);
     }
 
+      // Method baru untuk mencari produk berdasarkan kode_produk (untuk barcode)
+      public function getProdukByKode($kode_produk)
+      {
+          $produk = Produk::where('kode_produk', $kode_produk)
+              ->when(auth()->user()->level != 1, function($q) {
+                  return $q->where('id_cabang', auth()->user()->id_cabang);
+              })
+              ->first();
+  
+          if (!$produk) {
+              return response()->json([
+                  'success' => false,
+                  'message' => 'Produk tidak ditemukan'
+              ], 404);
+          }
+  
+          return response()->json([
+              'success' => true,
+              'data' => [
+                  'id_produk' => $produk->id_produk,
+                  'kode_produk' => $produk->kode_produk,
+                  'nama_produk' => $produk->nama_produk,
+                  'harga_jual' => $produk->harga_jual,
+                  'stok' => $produk->stok,
+                  'diskon' => $produk->diskon
+              ]
+          ]);
+      }
+  
+      // Method baru untuk menambah produk via barcode
+      public function storeByBarcode(Request $request)
+      {
+            $produk = Produk::where('kode_produk', $request->kode_produk)
+                ->where('id_cabang', auth()->user()->id_cabang)
+                ->first();
+  
+          if (!$produk) {
+              return response()->json([
+                  'success' => false,
+                  'message' => 'Produk tidak ditemukan'
+              ], 400);
+          }
+  
+          // Cek apakah produk sudah ada di transaksi
+          $existing = PenjualanDetail::where('id_penjualan', $request->id_penjualan)
+              ->where('id_produk', $produk->id_produk)
+              ->first();
+  
+          if ($existing) {
+              // Jika sudah ada, tambah jumlahnya
+              $existing->jumlah += 1;
+              $existing->subtotal = $existing->harga_jual * $existing->jumlah - (($existing->diskon * $existing->jumlah) / 100 * $existing->harga_jual);
+              $existing->save();
+          } else {
+              // Jika belum ada, buat baru
+              $detail = new PenjualanDetail();
+              $detail->id_penjualan = $request->id_penjualan;
+              $detail->id_produk = $produk->id_produk;
+              $detail->harga_jual = $produk->harga_jual;
+              $detail->jumlah = 1;
+              $detail->diskon = $produk->diskon;
+              $detail->subtotal = $produk->harga_jual - ($produk->diskon / 100 * $produk->harga_jual);
+              $detail->save();
+          }
+  
+          return response()->json([
+              'success' => true,
+              'message' => 'Produk berhasil ditambahkan'
+          ]);
+      }
+
     public function store(Request $request)
     {
-        $produk = Produk::where('id_produk', $request->id_produk)->first();
+        $produk = Produk::where('id_produk', $request->id_produk)
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->first();
+    
         if (! $produk) {
             return response()->json('Data gagal disimpan', 400);
         }
@@ -93,7 +177,7 @@ class PenjualanDetailController extends Controller
         $detail->subtotal = $produk->harga_jual - ($produk->diskon / 100 * $produk->harga_jual);;
         $detail->save();
 
-        return response()->json('Data berhasil disimpan', 200);
+        return back()->with('success', 'Data berhasil disimpan');
     }
 
     public function update(Request $request, $id)
@@ -109,7 +193,7 @@ class PenjualanDetailController extends Controller
         $detail = PenjualanDetail::find($id);
         $detail->delete();
 
-        return response(null, 204);
+        return back()->with('success', 'Data berhasil dihapus');
     }
 
     public function loadForm($diskon = 0, $total = 0, $diterima = 0)

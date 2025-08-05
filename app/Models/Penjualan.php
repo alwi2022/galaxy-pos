@@ -22,4 +22,9 @@ class Penjualan extends Model
     {
         return $this->hasOne(User::class, 'id', 'id_user');
     }
+
+    public function cabang()
+    {
+        return $this->belongsTo(Cabang::class, 'id_cabang');
+    }
 }

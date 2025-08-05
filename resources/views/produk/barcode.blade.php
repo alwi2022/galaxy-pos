@@ -1,35 +1,49 @@
+<!-- ===== VIEW 1: barcode_files.blade.php (File-based approach) ===== -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Cetak Barcode</title>
-
+    <title>Barcode Print</title>
     <style>
-        .text-center {
-            text-align: center;
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .barcode-container { 
+            width: 30%; 
+            float: left; 
+            text-align: center; 
+            border: 1px solid #000; 
+            margin: 5px; 
+            padding: 10px;
+            box-sizing: border-box;
         }
+        .clear { clear: both; }
+        .product-name { font-weight: bold; margin-bottom: 5px; }
+        .product-price { margin-bottom: 10px; }
+        .barcode-image { margin: 10px 0; }
+        .product-code { font-size: 12px; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <table width="100%">
-        <tr>
-            @foreach ($dataproduk as $produk)
-                <td class="text-center" style="border: 1px solid #333;">
-                    <p>{{ $produk->nama_produk }} - Rp. {{ format_uang($produk->harga_jual) }}</p>
-                    <img src="data:image/png;base64,{{ DNS1D::getBarcodePNG($produk->kode_produk, 'C39') }}" 
-                        alt="{{ $produk->kode_produk }}"
-                        width="180"
-                        height="60">
-                    <br>
-                    {{ $produk->kode_produk }}
-                </td>
-                @if ($no++ % 3 == 0)
-                    </tr><tr>
-                @endif
-            @endforeach
-        </tr>
-    </table>
+    @php $counter = 0; @endphp
+    @foreach ($dataproduk as $produk)
+        <div class="barcode-container">
+            <div class="product-name">{{ $produk->nama_produk }}</div>
+            <div class="product-price">Rp. {{ format_uang($produk->harga_jual) }}</div>
+            <div class="barcode-image">
+                <img src="{{ public_path($produk->barcode_file) }}" 
+                     alt="{{ $produk->kode_produk }}" 
+                     style="width: 150px; height: 50px;">
+            </div>
+            <div class="product-code">{{ $produk->kode_produk }}</div>
+        </div>
+        
+        @php $counter++; @endphp
+        @if ($counter % 3 == 0)
+            <div class="clear"></div>
+        @endif
+    @endforeach
+    
+    @if ($counter % 3 != 0)
+        <div class="clear"></div>
+    @endif
 </body>
 </html>

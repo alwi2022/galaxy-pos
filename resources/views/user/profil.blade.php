@@ -1,3 +1,4 @@
+<!-- resources/views/user/profil.blade.php -->
 @extends('layouts.master')
 
 @section('title')

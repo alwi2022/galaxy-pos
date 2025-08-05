@@ -17,4 +17,10 @@ class PembelianDetail extends Model
     {
         return $this->hasOne(Produk::class, 'id_produk', 'id_produk');
     }
+
+    public function pembelian()
+{
+    return $this->belongsTo(Pembelian::class, 'id_pembelian', 'id_pembelian');
+}
+
 }

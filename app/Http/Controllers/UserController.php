@@ -15,7 +15,10 @@ class UserController extends Controller
 
     public function data()
     {
-        $user = User::isNotAdmin()->orderBy('id', 'desc')->get();
+        $user = User::isNotAdmin()
+        ->where('id_cabang', auth()->user()->id_cabang)
+        ->orderBy('id', 'desc')
+        ->get();
 
         return datatables()
             ->of($user)
@@ -50,13 +53,23 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6|confirmed',
+            'level' => 'required|in:1,2,3',
+            'id_cabang' => 'required|exists:cabang,id_cabang',
+        ]);
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
-        $user->level = 2;
+        $user->level = $request->level;
         $user->foto = '/img/user.jpg';
+        $user->id_cabang = $request->id_cabang;
         $user->save();
+        
+        
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -97,11 +110,13 @@ class UserController extends Controller
         $user = User::find($id);
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->id_cabang = $request->id_cabang;
+        $user->level = $request->level;
         if ($request->has('password') && $request->password != "") 
             $user->password = bcrypt($request->password);
         $user->update();
 
-        return response()->json('Data berhasil disimpan', 200);
+        return back()->with('success', 'Data berhasil disimpan');
     }
 
     /**
@@ -114,7 +129,7 @@ class UserController extends Controller
     {
         $user = User::find($id)->delete();
 
-        return response(null, 204);
+        return back()->with('success', 'Data berhasil dihapus');
     }
 
     public function profil()
@@ -152,4 +167,22 @@ class UserController extends Controller
 
         return response()->json($user, 200);
     }
+
+    public function formPindahCabang()
+{
+    $cabang = \App\Models\Cabang::all();
+    return view('user.pindah_cabang', compact('cabang'));
+}
+
+public function pindahCabang(Request $request)
+{
+    $request->validate(['id_cabang' => 'required']);
+    
+    $user = auth()->user();
+    $user->id_cabang = $request->id_cabang;
+    $user->save();
+
+    return redirect()->route('dashboard')->with('success', 'Berhasil pindah cabang!');
+}
+
 }

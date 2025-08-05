@@ -12,4 +12,9 @@ class Member extends Model
     protected $table = 'member';
     protected $primaryKey = 'id_member';
     protected $guarded = [];
+
+    public function cabang()
+    {
+        return $this->belongsTo(Cabang::class, 'id_cabang');
+    }
 }

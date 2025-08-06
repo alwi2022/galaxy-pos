@@ -13,10 +13,21 @@
 <div class="row">
     <div class="col-lg-12">
         <div class="box">
-            <div class="box-header with-border">
-                <button onclick="addForm('{{ route('member.store') }}')" class="btn btn-success btn-xs btn-flat"><i class="fa fa-plus-circle"></i> Tambah</button>
-                <button onclick="cetakMember('{{ route('member.cetak_member') }}')" class="btn btn-info btn-xs btn-flat"><i class="fa fa-id-card"></i> Cetak Member</button>
-            </div>
+        <div class="box-header with-border">
+    <button onclick="addForm('{{ route('member.store') }}')" class="btn btn-success btn-xs btn-flat">
+        <i class="fa fa-plus-circle"></i> Tambah
+    </button>
+
+    <button type="button" onclick="cetakMember()" class="btn btn-info btn-xs btn-flat">
+        <i class="fa fa-id-card"></i> Cetak Member
+    </button>
+
+    <!-- Form tersembunyi untuk cetak -->
+    <form method="POST" action="{{ route('member.cetak_member') }}" id="form-cetak" target="_blank" style="display: none;">
+        @csrf
+    </form>
+</div>
+
             <div class="box-body table-responsive">
                 <form action="" method="post" class="form-member">
                     @csrf
@@ -176,21 +187,38 @@
         });
     }
 
-    function cetakMember(url) {
-        if ($('input:checked').length < 1) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Perhatian',
-                text: 'Pilih data yang akan dicetak',
-                confirmButtonText: 'OK'
-            });
-            return;
-        } else {
-            $('.form-member')
-                .attr('target', '_blank')
-                .attr('action', url)
-                .submit();
-        }
+ // JavaScript Function
+ function cetakMember() {
+    const selected = $('input[name="id_member[]"]:checked');
+
+    if (selected.length < 1) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Perhatian',
+            text: 'Pilih data member yang akan dicetak',
+            confirmButtonText: 'OK'
+        });
+        return;
     }
+
+    const form = $('#form-cetak');
+
+    // Hapus hanya input id_member sebelumnya (jangan hapus _token)
+    form.find('input[name="id_member[]"]').remove();
+
+    // Tambahkan kembali input id_member yang terpilih
+    selected.each(function () {
+        form.append(`<input type="hidden" name="id_member[]" value="${$(this).val()}">`);
+    });
+
+    form.submit();
+
+    // Reset setelah cetak
+    selected.prop('checked', false);
+    $('#select_all').prop('checked', false);
+}
+
+
+
 </script>
 @endpush

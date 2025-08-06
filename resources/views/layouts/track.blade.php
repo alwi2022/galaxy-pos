@@ -1,3 +1,4 @@
+<!-- resources/views/layouts/track.blade.php -->
 <!DOCTYPE html>
 <html lang="id">
 <head>

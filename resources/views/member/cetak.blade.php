@@ -2,101 +2,130 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Cetak Kartu Member</title>
-
     <style>
-        .box {
-            position: relative;
+        body {
+           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            margin: 10px;
+            margin: 10px;
         }
+        table {
+            width: 100%;
+        }
+        td {
+            width: 50%;
+            padding: 10px;
+            vertical-align: top;
+        }
+
         .card {
-            width: 85.60mm;
+            position: relative;
+            width: 324px;  /* 85.6mm = 324px at 96dpi */
+             height: 204px; /* 53.98mm = 204px at 96dpi */
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto;
+        }
+
+      
+        .card img.bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            object-fit: cover;
+            z-index: 1;
         }
         .logo {
             position: absolute;
-            top: 3pt;
-            right: 0pt;
-            font-size: 16pt;
-            font-family: Arial, Helvetica, sans-serif;
-            font-weight: bold;
-            color: #fff !important;
+            top: 8px;
+            right: 8px;
+            z-index: 2;
+            text-align: right;
+            padding: 4px 6px;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+        }
+
+   
+        .logo img {
+            height: 40px;
         }
         .logo p {
-            text-align: right;
-            margin-right: 16pt;
-        }
-        .logo img {
-            position: absolute;
-            margin-top: -5pt;
-            width: 40px;
-            height: 40px;
-            right: 16pt;
+            margin: 0;
+            font-weight: bold;
         }
         .nama {
             position: absolute;
-            top: 100pt;
-            right: 16pt;
-            font-size: 12pt;
-            font-family: Arial, Helvetica, sans-serif;
+            bottom: 40px;
+            right: 10px;
             font-weight: bold;
-            color: #fff !important;
+            z-index: 2;
         }
         .telepon {
             position: absolute;
-            margin-top: 120pt;
-            right: 16pt;
-            color: #fff;
+            bottom: 20px;
+            right: 10px;
+            z-index: 2;
         }
         .barcode {
             position: absolute;
-            top: 105pt;
-            left: .860rem;
-            border: 1px solid #fff;
-            padding: .5px;
-            background: #fff;
+            bottom: 15px;
+            left: 15px;
+            z-index: 3;
+            background: rgba(255,255,255,0.95);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        .text-left {
-            text-align: left;
+
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
         }
-        .text-right {
-            text-align: right;
-        }
-        .text-center {
-            text-align: center;
-        }
+
+      
     </style>
 </head>
 <body>
-    <section style="border: 1px solid #fff">
-        <table width="100%">
-            @foreach ($datamember as $key => $data)
-                <tr>
-                    @foreach ($data as $item)
-                        <td class="text-center">
-                            <div class="box">
-                                <img src="{{ public_path($setting->path_kartu_member) }}" alt="card" width="50%">
-                                <div class="logo">
-                                    <p>{{ $setting->nama_perusahaan }}</p>
-                                    <img src="{{ public_path($setting->path_logo) }}" alt="logo">
-                                </div>
-                                <div class="nama">{{ $item->nama }}</div>
-                                <div class="telepon">{{ $item->telepon }}</div>
-                                <div class="barcode text-left">
-                                    <img src="data:image/png;base64, {{ DNS2D::getBarcodePNG("$item->kode_member", 'QRCODE') }}" alt="qrcode"
-                                        height="45"
-                                        widht="45">
-                                </div>
-                            </div>
-                        </td>
-                        
-                        @if (count($datamember) == 1)
-                        <td class="text-center" style="width: 50%;"></td>
-                        @endif
-                    @endforeach
-                </tr>
+    <table>
+        @foreach ($datamember->chunk(2) as $chunk)
+        <tr>
+            @foreach ($chunk as $member)
+            <td>
+                <div class="card">
+                    <img class="bg" src="{{ asset($setting->path_kartu_member) }}" alt="bg">
+
+                    <div class="logo">
+                        <p>{{ $setting->nama_perusahaan }}</p>
+                        <img src="{{ asset($setting->path_logo) }}" alt="logo">
+                    </div>
+
+                    <div class="nama">{{ $member->nama }}</div>
+                    <div class="telepon">{{ $member->telepon }}</div>
+
+                    <div class="barcode">
+                    {!! QrCode::size(80)->generate(url('member/track/' . $member->kode_member)) !!}
+                    </div>
+                </div>
+            </td>
             @endforeach
-        </table>
-    </section>
+
+            @if ($chunk->count() == 1)
+                <td></td>
+            @endif
+        </tr>
+        @endforeach
+    </table>
 </body>
 </html>

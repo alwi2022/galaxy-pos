@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Nota Kecil</title>
 
-    <?php
+    @php
     $style = '
     <style>
         * {
-            font-family: "consolas", sans-serif;
+            font-family: "consolas", monospace;
         }
         p {
             display: block;
-            margin: 3px;
+            margin: 3px 0;
             font-size: 10pt;
         }
         table td {
@@ -30,19 +30,15 @@
         @media print {
             @page {
                 margin: 0;
-                size: 75mm ;
-    ';
-    ?>
-    <?php 
-    $style .= 
-        ! empty($_COOKIE['innerHeight'])
-            ? $_COOKIE['innerHeight'] .'mm; }'
-            : '}';
-    ?>
-    <?php
-    $style .= '
+                size: 75mm ';
+    $style .= !empty($_COOKIE['innerHeight']) 
+                ? $_COOKIE['innerHeight'] . 'mm;'
+                : 'auto;';
+    $style .= '}
             html, body {
                 width: 70mm;
+                height: auto;
+                overflow: hidden;
             }
             .btn-print {
                 display: none;
@@ -50,26 +46,30 @@
         }
     </style>
     ';
-    ?>
+    @endphp
 
     {!! $style !!}
 </head>
-<body onload="window.print()">
-    <button class="btn-print" style="position: absolute; right: 1rem; top: rem;" onclick="window.print()">Print</button>
+<body onload="printNota()">
+    <!-- Tombol print manual untuk testing -->
+    <button class="btn-print" style="position: absolute; right: 1rem; top: 1rem;" onclick="printNota()">Cetak</button>
+
     <div class="text-center">
         <h3 style="margin-bottom: 5px;">{{ strtoupper($setting->nama_perusahaan) }}</h3>
         <p>{{ strtoupper($setting->alamat) }}</p>
     </div>
+
     <br>
+
     <div>
         <p style="float: left;">{{ date('d-m-Y') }}</p>
-        <p style="float: right">{{ strtoupper(auth()->user()->name) }}</p>
+        <p style="float: right;">{{ strtoupper(auth()->user()->name) }}</p>
     </div>
-    <div class="clear-both" style="clear: both;"></div>
+    <div style="clear: both;"></div>
+
     <p>No: {{ tambah_nol_didepan($penjualan->id_penjualan, 10) }}</p>
     <p class="text-center">===================================</p>
-    
-    <br>
+
     <table width="100%" style="border: 0;">
         @foreach ($detail as $item)
             <tr>
@@ -82,6 +82,7 @@
             </tr>
         @endforeach
     </table>
+
     <p class="text-center">-----------------------------------</p>
 
     <table width="100%" style="border: 0;">
@@ -115,15 +116,22 @@
     <p class="text-center">-- TERIMA KASIH --</p>
 
     <script>
-        let body = document.body;
-        let html = document.documentElement;
-        let height = Math.max(
+        function printNota() {
+            let body = document.body;
+            let html = document.documentElement;
+            let height = Math.max(
                 body.scrollHeight, body.offsetHeight,
                 html.clientHeight, html.scrollHeight, html.offsetHeight
             );
 
-        document.cookie = "innerHeight=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "innerHeight="+ ((height + 50) * 0.264583);
+            // Set cookie tinggi halaman dalam mm (1px = 0.264583mm)
+            document.cookie = "innerHeight=" + ((height + 50) * 0.264583);
+
+            // Delay 500ms untuk memberi waktu cookie tersimpan
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
     </script>
 </body>
 </html>

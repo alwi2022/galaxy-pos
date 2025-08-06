@@ -16,6 +16,14 @@ class Produk extends Model
     public function cabang() {
         return $this->belongsTo(Cabang::class, 'id_cabang');
     }
+
+
+
+    public function kategori()
+{
+    return $this->belongsTo(Kategori::class, 'id_kategori');
+}
+
     
     
 

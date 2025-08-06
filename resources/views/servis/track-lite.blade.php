@@ -238,6 +238,7 @@
             color: #2c3e50;
             font-size: 16px;
             font-weight: 500;
+            word-break: break-word;
         }
 
         .detail-value.code {
@@ -247,6 +248,9 @@
             font-family: 'Courier New', monospace;
             border: 1px solid #e9ecef;
             display: inline-block;
+            word-break: break-all;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .detail-value.price {
@@ -262,6 +266,7 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            width: fit-content;
         }
 
         .status-badge.status-diproses {
@@ -282,14 +287,49 @@
             border: 1px solid #c3e6cb;
         }
 
-        /* Responsive Design */
+        /* Enhanced Responsive Design */
+        
+        /* Large tablets and small desktops */
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 90%;
+                padding: 16px;
+            }
+        }
+
+        /* Tablets */
         @media (max-width: 768px) {
             .container {
+                max-width: 100%;
                 padding: 15px;
+                margin: 0;
+            }
+
+            .status-header {
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+            }
+
+            .status-header h2 {
+                font-size: 24px;
+            }
+
+            .timeline-section,
+            .details-section {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .timeline-section h4,
+            .details-section h4 {
+                font-size: 16px;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
             }
 
             .details-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
             }
 
             .detail-item.full-width {
@@ -302,21 +342,252 @@
 
             .timeline-marker {
                 left: -16px;
+                width: 10px;
+                height: 10px;
             }
 
-            .status-header h2 {
-                font-size: 24px;
+            .timeline-content {
+                padding-left: 15px;
+            }
+
+            .timeline-date {
+                font-size: 13px;
+            }
+
+            .timeline-status {
+                font-size: 15px;
+            }
+
+            .timeline-user {
+                font-size: 12px;
+            }
+
+            .detail-value {
+                font-size: 15px;
+            }
+
+            .detail-item label {
+                font-size: 13px;
+                margin-bottom: 4px;
             }
         }
 
-        @media (max-width: 480px) {
+        /* Large phones */
+        @media (max-width: 640px) {
             .container {
-                padding: 10px;
+                padding: 12px;
+            }
+
+            .status-header {
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+            }
+
+            .status-header h2 {
+                font-size: 22px;
             }
 
             .timeline-section,
             .details-section {
                 padding: 16px;
+                margin-bottom: 16px;
+            }
+
+            .details-grid {
+                gap: 14px;
+            }
+
+            .timeline-empty {
+                padding: 30px 15px;
+            }
+
+            .detail-value.code {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+
+            .status-badge {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .status-header h2 {
+                font-size: 20px;
+            }
+
+            .timeline-section,
+            .details-section {
+                padding: 14px;
+                margin-bottom: 14px;
+                border-radius: 6px;
+            }
+
+            .timeline-section h4,
+            .details-section h4 {
+                font-size: 15px;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+            }
+
+            .details-grid {
+                gap: 12px;
+            }
+
+            .timeline {
+                padding-left: 20px;
+            }
+
+            .timeline::before {
+                left: 10px;
+            }
+
+            .timeline-marker {
+                left: -14px;
+                width: 8px;
+                height: 8px;
+                border: 2px solid #ffffff;
+            }
+
+            .timeline-content {
+                padding-left: 12px;
+            }
+
+            .timeline-date {
+                font-size: 12px;
+            }
+
+            .timeline-status {
+                font-size: 14px;
+            }
+
+            .timeline-user {
+                font-size: 11px;
+            }
+
+            .detail-value {
+                font-size: 14px;
+            }
+
+            .detail-item label {
+                font-size: 12px;
+                margin-bottom: 3px;
+            }
+
+            .detail-value.code {
+                padding: 5px 8px;
+                font-size: 13px;
+            }
+
+            .status-badge {
+                padding: 4px 8px;
+                font-size: 10px;
+                border-radius: 15px;
+            }
+
+            .timeline-empty {
+                padding: 25px 10px;
+            }
+
+            .empty-state {
+                font-size: 14px;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 360px) {
+            .container {
+                padding: 8px;
+            }
+
+            .status-header {
+                margin-bottom: 12px;
+                padding-bottom: 10px;
+            }
+
+            .status-header h2 {
+                font-size: 18px;
+            }
+
+            .timeline-section,
+            .details-section {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .timeline-section h4,
+            .details-section h4 {
+                font-size: 14px;
+                margin-bottom: 10px;
+                padding-bottom: 6px;
+            }
+
+            .details-grid {
+                gap: 10px;
+            }
+
+            .detail-value {
+                font-size: 13px;
+            }
+
+            .detail-item label {
+                font-size: 11px;
+            }
+
+            .detail-value.code {
+                font-size: 12px;
+                padding: 4px 6px;
+            }
+        }
+
+        /* Landscape orientation for mobile devices */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .container {
+                padding: 8px;
+            }
+
+            .status-header {
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+
+            .status-header h2 {
+                font-size: 20px;
+            }
+
+            .timeline-section,
+            .details-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .timeline-empty {
+                padding: 20px 15px;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            .container {
+                max-width: none;
+                padding: 0;
+            }
+
+            .timeline-section,
+            .details-section {
+                box-shadow: none;
+                border: 1px solid #ccc;
+                break-inside: avoid;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr 1fr;
             }
         }
     </style>

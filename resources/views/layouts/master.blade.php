@@ -99,6 +99,13 @@
         }
     </script>
 
+    <script>
+    $(document).ready(function () {
+        $('.sidebar-menu').tree(); // untuk menu dropdown sidebar
+    });
+</script>
+
+
 @if (session('success'))
 <script>
     Swal.fire({
@@ -118,6 +125,8 @@
     });
 </script>
 @endif
+
+
 
 @if (session('alert'))
 <script>

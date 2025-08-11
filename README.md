@@ -8,7 +8,7 @@
 
 Aplikasi **Point of Sales (POS)** ini digunakan untuk mengelola transaksi penjualan di toko, kasir, dan juga layanan servis.  
 Dibangun menggunakan **Laravel v8.* ** dengan minimal **PHP v7.4**, aplikasi ini memiliki fitur manajemen produk, transaksi, laporan, serta manajemen user multi-role.  
-Project ini merupakan pengembangan dari [repo asli](https://github.com/nursandiid/tutorial-membuat-aplikasi-point-of-sales) dengan tambahan fitur, perbaikan bug, dan update UI/UX.
+Project ini merupakan pengembangan dari https://github.com/nursandiid/tutorial-membuat-aplikasi-point-of-sales dengan tambahan fitur, perbaikan bug, dan update UI/UX.
 
 ---
 
@@ -131,7 +131,7 @@ php artisan serve
 
 ---
 
-## 🖥 Teknologi yang Digunakan
+## Teknologi yang Digunakan
 - Laravel 8.x
 - Livewire
 - Laravel Jetstream
@@ -143,7 +143,7 @@ php artisan serve
 
 ---
 
-## 📷 Screenshot
+## Screenshot
 
 - **Halaman Login**  
   ![Login Page](public/screenshots/login.png)

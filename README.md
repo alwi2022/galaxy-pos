@@ -12,7 +12,7 @@ Project ini merupakan pengembangan dari [repo asli](https://github.com/nursandii
 
 ---
 
-## ✨ Fitur Tambahan & Update
+## Fitur Tambahan & Update
 
 - **Manajemen Cabang**
   - Multi-cabang dengan user dan data terpisah.
@@ -23,6 +23,7 @@ Project ini merupakan pengembangan dari [repo asli](https://github.com/nursandii
   - Update status servis (misal: proses, selesai, diambil).
   - Tracking status servis secara real-time.
   - Penghasilan dari servis otomatis terhitung di laporan.
+  - **Kirim notifikasi WhatsApp ke customer** berisi status servis & link tracking.
 - **Perbaikan Bug**
   - Fix error PDF saat cetak barcode member & produk.
 - **Update UI**
@@ -35,7 +36,7 @@ Project ini merupakan pengembangan dari [repo asli](https://github.com/nursandii
 
 ---
 
-## 🔑 Akun Demo
+## Akun Demo
 
 **Administrator**
 ```
@@ -57,7 +58,7 @@ Password: 123
 
 ---
 
-## 📦 Fitur Utama (Base + Update)
+## Fitur Utama (Base + Update)
 
 - **Manajemen Kategori Produk**
 - **Manajemen Produk**
@@ -86,7 +87,7 @@ Password: 123
 
 ---
 
-## 🚀 Instalasi
+## Instalasi
 
 #### Clone Repository
 ```bash
@@ -152,6 +153,12 @@ php artisan serve
 
 - **Manajemen Service**  
   ![Service Management](public/screenshots/service.png)
+
+- **Tracking Status Servis**  
+  ![Tracking Status](public/screenshots/tracking.png)
+
+- **Kirim Notifikasi WhatsApp**  
+  ![WhatsApp Notification](public/screenshots/wa-notif.png)
 
 ---
 

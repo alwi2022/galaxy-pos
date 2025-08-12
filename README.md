@@ -91,7 +91,7 @@ Password: 123
 
 #### Clone Repository
 ```bash
-git clone [https://github.com/alwi2022/galaxy-pos.git](https://github.com/alwi2022/galaxy-pos.git)
+git clone https://github.com/alwi2022/galaxy-pos.git
 cd galaxy-pos
 ```
 

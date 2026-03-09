@@ -5,8 +5,9 @@ use Illuminate\Support\Str;
 $mysqlHost = env('DB_HOST', '127.0.0.1');
 $mysqlSslCa = env('MYSQL_ATTR_SSL_CA');
 $defaultMysqlSslCa = storage_path('certs/aiven-ca.pem');
+$usesAivenHost = str_contains($mysqlHost, '.aivencloud.com');
 
-if (! $mysqlSslCa && ! in_array($mysqlHost, ['127.0.0.1', 'localhost'], true) && is_file($defaultMysqlSslCa)) {
+if (! $mysqlSslCa && $usesAivenHost && is_file($defaultMysqlSslCa)) {
     $mysqlSslCa = $defaultMysqlSslCa;
 }
 

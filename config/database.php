@@ -1,7 +1,19 @@
 <?php
 
-use PDO;
 use Illuminate\Support\Str;
+
+$mysqlHost = env('DB_HOST', '127.0.0.1');
+$mysqlSslCa = env('MYSQL_ATTR_SSL_CA');
+$defaultMysqlSslCa = storage_path('certs/aiven-ca.pem');
+
+if (! $mysqlSslCa && ! in_array($mysqlHost, ['127.0.0.1', 'localhost'], true) && is_file($defaultMysqlSslCa)) {
+    $mysqlSslCa = $defaultMysqlSslCa;
+}
+
+$mysqlOptions = extension_loaded('pdo_mysql') ? array_filter([
+    \PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 10),
+    \PDO::MYSQL_ATTR_SSL_CA => $mysqlSslCa,
+], static fn ($value) => $value !== null && $value !== '') : [];
 
 return [
 
@@ -44,25 +56,23 @@ return [
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
         ],
 
-'mysql' => [
-    'driver' => 'mysql',
-    'url' => env('DATABASE_URL'),
-    'host' => env('DB_HOST', '127.0.0.1'),
-    'port' => env('DB_PORT', '3306'),
-    'database' => env('DB_DATABASE', 'forge'),
-    'username' => env('DB_USERNAME', 'forge'),
-    'password' => env('DB_PASSWORD', ''),
-    'unix_socket' => env('DB_SOCKET', ''),
-    'charset' => 'utf8mb4',
-    'collation' => 'utf8mb4_unicode_ci',
-    'prefix' => '',
-    'prefix_indexes' => true,
-    'strict' => true,
-    'engine' => null,
-    'options' => extension_loaded('pdo_mysql') ? array_filter([
-        PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-    ]) : [],
-],
+        'mysql' => [
+            'driver' => 'mysql',
+            'url' => env('DATABASE_URL'),
+            'host' => $mysqlHost,
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'forge'),
+            'username' => env('DB_USERNAME', 'forge'),
+            'password' => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => $mysqlOptions,
+        ],
 
         'pgsql' => [
             'driver' => 'pgsql',

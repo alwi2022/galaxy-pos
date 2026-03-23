@@ -8,17 +8,25 @@ use App\Models\Penjualan;
 use App\Models\PenjualanDetail;
 use App\Models\Produk;
 use App\Models\Setting;
+use App\Support\TransactionCalculator;
 use Illuminate\Http\Request;
 
 class PenjualanDetailController extends Controller
 {
+    protected TransactionCalculator $calculator;
+
+    public function __construct(TransactionCalculator $calculator)
+    {
+        $this->calculator = $calculator;
+    }
+
     public function index()
     {
         $produk = Produk::orderBy('nama_produk')
         ->where('id_cabang', auth()->user()->id_cabang)
         ->get();
     
-    $member = Member::orderBy('nama')
+        $member = Member::orderBy('nama')
         ->where('id_cabang', auth()->user()->id_cabang)
         ->get();
     
@@ -28,8 +36,9 @@ class PenjualanDetailController extends Controller
         if ($id_penjualan = session('id_penjualan')) {
             $penjualan = Penjualan::find($id_penjualan);
             $memberSelected = $penjualan->member ?? new Member();
+            $ppnPersen = Setting::resolvePpnPersen($penjualan->ppn_persen ?? null);
 
-            return view('penjualan_detail.index', compact('produk', 'member', 'diskon', 'id_penjualan', 'penjualan', 'memberSelected'));
+            return view('penjualan_detail.index', compact('produk', 'member', 'diskon', 'id_penjualan', 'penjualan', 'memberSelected', 'ppnPersen'));
         } else {
             if (auth()->user()->level == 1) {
                 return redirect()->route('transaksi.baru');
@@ -198,15 +207,34 @@ class PenjualanDetailController extends Controller
 
     public function loadForm($diskon = 0, $total = 0, $diterima = 0)
     {
-        $bayar   = $total - ($diskon / 100 * $total);
-        $kembali = ($diterima != 0) ? $diterima - $bayar : 0;
-        $data    = [
+        $ppnPersen = request()->has('ppn_persen')
+            ? (float) request('ppn_persen')
+            : Setting::defaultPpnPersen();
+
+        $summary = $this->calculator->calculateFromSubtotal(
+            (int) $total,
+            (float) $diskon,
+            $ppnPersen,
+            max((int) $diterima, 0)
+        );
+
+        $data = [
             'totalrp' => format_uang($total),
-            'bayar' => $bayar,
-            'bayarrp' => format_uang($bayar),
-            'terbilang' => ucwords(terbilang($bayar). ' Rupiah'),
-            'kembalirp' => format_uang($kembali),
-            'kembali_terbilang' => ucwords(terbilang($kembali). ' Rupiah'),
+            'diskonrp' => format_uang($summary['diskon_nominal']),
+            'ppn_persen' => $summary['ppn_persen'],
+            'dpp' => $summary['dpp'],
+            'dpprp' => format_uang($summary['dpp']),
+            'ppn' => $summary['ppn_nominal'],
+            'ppnrp' => format_uang($summary['ppn_nominal']),
+            'bayar' => $summary['grand_total'],
+            'bayarrp' => format_uang($summary['grand_total']),
+            'terbilang' => ucwords(terbilang($summary['grand_total']). ' Rupiah'),
+            'dibayar' => $summary['dibayar'],
+            'dibayarrp' => format_uang($summary['dibayar']),
+            'sisa' => $summary['sisa'],
+            'sisarp' => format_uang($summary['sisa']),
+            'kembalirp' => format_uang($summary['kembali']),
+            'kembali_terbilang' => ucwords(terbilang($summary['kembali']). ' Rupiah'),
         ];
 
         return response()->json($data);

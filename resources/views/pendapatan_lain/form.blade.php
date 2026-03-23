@@ -12,17 +12,17 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group row">
-                        <label for="tanggal_pengeluaran" class="col-lg-3 control-label">Tanggal</label>
+                        <label for="tanggal_pendapatan" class="col-lg-3 control-label">Tanggal</label>
                         <div class="col-lg-7">
-                            <input type="date" name="tanggal_pengeluaran" id="tanggal_pengeluaran" class="form-control" required autofocus>
+                            <input type="date" name="tanggal_pendapatan" id="tanggal_pendapatan" class="form-control" required autofocus>
                             <span class="help-block with-errors"></span>
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="kategori_pengeluaran" class="col-lg-3 control-label">Kategori</label>
+                        <label for="kategori_pendapatan" class="col-lg-3 control-label">Kategori</label>
                         <div class="col-lg-7">
-                            <select name="kategori_pengeluaran" id="kategori_pengeluaran" class="form-control" required>
-                                @foreach (daftar_kategori_pengeluaran() as $value => $label)
+                            <select name="kategori_pendapatan" id="kategori_pendapatan" class="form-control" required>
+                                @foreach (daftar_kategori_pendapatan_lain() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
                             </select>

@@ -23,11 +23,21 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
+        $request->validate([
+            'nama_perusahaan' => 'required|string|max:255',
+            'telepon' => 'required|string|max:255',
+            'alamat' => 'required|string',
+            'diskon' => 'required|numeric|min:0|max:100',
+            'ppn_default' => 'required|numeric|min:0|max:100',
+            'tipe_nota' => 'required|in:1,2',
+        ]);
+
         $setting = Setting::first();
         $setting->nama_perusahaan = $request->nama_perusahaan;
         $setting->telepon = $request->telepon;
         $setting->alamat = $request->alamat;
         $setting->diskon = $request->diskon;
+        $setting->ppn_default = $request->ppn_default;
         $setting->tipe_nota = $request->tipe_nota;
 
         if ($request->hasFile('path_logo')) {

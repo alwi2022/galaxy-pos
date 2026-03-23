@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Kategori;
 use App\Models\Member;
-use App\Models\Pembelian;
+use App\Models\PembelianPembayaran;
+use App\Models\PendapatanLain;
 use App\Models\Pengeluaran;
-use App\Models\Penjualan;
+use App\Models\PenjualanPembayaran;
 use App\Models\Produk;
 use App\Models\Servis;
 use App\Models\Supplier;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -35,11 +35,12 @@ class DashboardController extends Controller
 
             while (strtotime($tanggal_awal) <= strtotime($tanggal_akhir)) {
                 $data_tanggal[] = (int) substr($tanggal_awal, 8, 2);
-                $penjualan = Penjualan::where('id_cabang', $id_cabang)->whereDate('created_at', $tanggal_awal)->sum('bayar');
-                $pembelian = Pembelian::where('id_cabang', $id_cabang)->whereDate('created_at', $tanggal_awal)->sum('bayar');
-                $pengeluaran = Pengeluaran::where('id_cabang', $id_cabang)->whereDate('created_at', $tanggal_awal)->sum('nominal');
+                $penjualan = PenjualanPembayaran::where('id_cabang', $id_cabang)->whereDate('created_at', $tanggal_awal)->sum('nominal');
+                $pembelian = PembelianPembayaran::where('id_cabang', $id_cabang)->whereDate('created_at', $tanggal_awal)->sum('nominal');
+                $pendapatanLain = PendapatanLain::where('id_cabang', $id_cabang)->whereDate('tanggal_pendapatan', $tanggal_awal)->sum('nominal');
+                $pengeluaran = Pengeluaran::where('id_cabang', $id_cabang)->whereDate('tanggal_pengeluaran', $tanggal_awal)->sum('nominal');
 
-                $data_pendapatan[] = $penjualan - $pembelian - $pengeluaran;
+                $data_pendapatan[] = $penjualan + $pendapatanLain - $pembelian - $pengeluaran;
                 $tanggal_awal = date('Y-m-d', strtotime('+1 day', strtotime($tanggal_awal)));
             }
 

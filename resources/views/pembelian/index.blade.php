@@ -26,9 +26,16 @@
                         <th>Tanggal</th>
                         <th>Supplier</th>
                         <th>Total Item</th>
-                        <th>Total Harga</th>
+                        <th>Subtotal</th>
                         <th>Diskon</th>
-                        <th>Total Bayar</th>
+                        <th>PPN</th>
+                        <th>Tagihan</th>
+                        <th>Dibayar</th>
+                        <th>Sisa</th>
+                        <th>Skema</th>
+                        <th>Metode</th>
+                        <th>Jatuh Tempo</th>
+                        <th>Status</th>
                         <th width="15%"><i class="fa fa-cog"></i></th>
                     </thead>
                 </table>
@@ -47,10 +54,11 @@
 
     $(function () {
         table = $('.table-pembelian').DataTable({
-            responsive: true,
+            responsive: false,
             processing: true,
             serverSide: true,
             autoWidth: false,
+            scrollX: true,
             ajax: {
                 url: '{{ route('pembelian.data') }}',
             },
@@ -61,7 +69,14 @@
                 {data: 'total_item'},
                 {data: 'total_harga'},
                 {data: 'diskon'},
-                {data: 'bayar'},
+                {data: 'ppn'},
+                {data: 'tagihan'},
+                {data: 'dibayar'},
+                {data: 'sisa'},
+                {data: 'skema_pembayaran'},
+                {data: 'metode_pembayaran'},
+                {data: 'jatuh_tempo'},
+                {data: 'status_pembayaran'},
                 {data: 'aksi', searchable: false, sortable: false},
             ]
         });

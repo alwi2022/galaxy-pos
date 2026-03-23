@@ -70,6 +70,14 @@
                     </div>
 
                     <div class="form-group row">
+                        <label for="ppn_default" class="col-lg-2 control-label">PPN Default (%)</label>
+                        <div class="col-lg-2">
+                            <input type="number" name="ppn_default" class="form-control" id="ppn_default" min="0" max="100" step="0.01" required>
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
                         <label for="tipe_nota" class="col-lg-2 control-label">Tipe Nota</label>
                         <div class="col-lg-2">
                             <select name="tipe_nota" class="form-control" id="tipe_nota" required>
@@ -136,6 +144,7 @@
                 $('[name=telepon]').val(response.telepon);
                 $('[name=alamat]').val(response.alamat);
                 $('[name=diskon]').val(response.diskon);
+                $('[name=ppn_default]').val(response.ppn_default ?? 11);
                 $('[name=tipe_nota]').val(response.tipe_nota);
                 $('title').text(response.nama_perusahaan + ' | Pengaturan');
 

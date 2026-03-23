@@ -78,7 +78,7 @@
             <tr>
                 <td>{{ $item->jumlah }} x {{ format_uang($item->harga_jual) }}</td>
                 <td></td>
-                <td class="text-right">{{ format_uang($item->jumlah * $item->harga_jual) }}</td>
+                <td class="text-right">{{ format_uang($item->subtotal) }}</td>
             </tr>
         @endforeach
     </table>
@@ -96,19 +96,35 @@
         </tr>
         <tr>
             <td>Diskon:</td>
-            <td class="text-right">{{ format_uang($penjualan->diskon) }}</td>
+            <td class="text-right">{{ $penjualan->diskon }}% / {{ format_uang(hitung_diskon_nominal($penjualan->total_harga, $penjualan->diskon)) }}</td>
         </tr>
         <tr>
-            <td>Total Bayar:</td>
+            <td>DPP:</td>
+            <td class="text-right">{{ format_uang($penjualan->total_harga - hitung_diskon_nominal($penjualan->total_harga, $penjualan->diskon)) }}</td>
+        </tr>
+        <tr>
+            <td>PPN:</td>
+            <td class="text-right">{{ $penjualan->ppn_persen ?? 0 }}% / {{ format_uang($penjualan->ppn_nominal ?? 0) }}</td>
+        </tr>
+        <tr>
+            <td>Tagihan:</td>
             <td class="text-right">{{ format_uang($penjualan->bayar) }}</td>
         </tr>
         <tr>
-            <td>Diterima:</td>
-            <td class="text-right">{{ format_uang($penjualan->diterima) }}</td>
+            <td>Terbayar:</td>
+            <td class="text-right">{{ format_uang($penjualan->dibayar) }}</td>
         </tr>
         <tr>
-            <td>Kembali:</td>
-            <td class="text-right">{{ format_uang($penjualan->diterima - $penjualan->bayar) }}</td>
+            <td>Sisa:</td>
+            <td class="text-right">{{ format_uang($penjualan->sisa) }}</td>
+        </tr>
+        <tr>
+            <td>Metode:</td>
+            <td class="text-right">{{ label_metode_pembayaran($penjualan->metode_pembayaran) }}</td>
+        </tr>
+        <tr>
+            <td>Status:</td>
+            <td class="text-right">{{ label_status_pembayaran($penjualan->status_pembayaran) }}</td>
         </tr>
     </table>
 

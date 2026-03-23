@@ -6,26 +6,37 @@ namespace App\Http\Controllers;
 use App\Models\Pembelian;
 use App\Models\PembelianDetail;
 use App\Models\Produk;
+use App\Models\Setting;
 use App\Models\Supplier;
+use App\Support\TransactionCalculator;
 use Illuminate\Http\Request;
 
 class PembelianDetailController extends Controller
 {
+    protected TransactionCalculator $calculator;
+
+    public function __construct(TransactionCalculator $calculator)
+    {
+        $this->calculator = $calculator;
+    }
+
     public function index()
     {
         $id_pembelian = session('id_pembelian');
+        $pembelian = Pembelian::find($id_pembelian);
         $produk = Produk::orderBy('nama_produk')
         ->where('id_cabang', auth()->user()->id_cabang)
         ->get();
         $supplier = Supplier::where('id_cabang', auth()->user()->id_cabang)
             ->find(session('id_supplier'));
-        $diskon = Pembelian::find($id_pembelian)->diskon ?? 0;
+        $diskon = $pembelian->diskon ?? 0;
+        $ppnPersen = Setting::resolvePpnPersen($pembelian->ppn_persen ?? null);
 
         if (! $supplier) {
             abort(404);
         }
 
-        return view('pembelian_detail.index', compact('id_pembelian', 'produk', 'supplier', 'diskon'));
+        return view('pembelian_detail.index', compact('id_pembelian', 'produk', 'supplier', 'diskon', 'pembelian', 'ppnPersen'));
     }
 
     public function data($id)
@@ -111,14 +122,34 @@ class PembelianDetailController extends Controller
         return response(null, 204);
     }
 
-    public function loadForm($diskon, $total)
+    public function loadForm($diskon, $total, $dibayar = 0)
     {
-        $bayar = $total - ($diskon / 100 * $total);
+        $ppnPersen = request()->has('ppn_persen')
+            ? (float) request('ppn_persen')
+            : Setting::defaultPpnPersen();
+
+        $summary = $this->calculator->calculateFromSubtotal(
+            (int) $total,
+            (float) $diskon,
+            $ppnPersen,
+            max((int) $dibayar, 0)
+        );
+
         $data  = [
             'totalrp' => format_uang($total),
-            'bayar' => $bayar,
-            'bayarrp' => format_uang($bayar),
-            'terbilang' => ucwords(terbilang($bayar). ' Rupiah')
+            'diskonrp' => format_uang($summary['diskon_nominal']),
+            'ppn_persen' => $summary['ppn_persen'],
+            'dpp' => $summary['dpp'],
+            'dpprp' => format_uang($summary['dpp']),
+            'ppn' => $summary['ppn_nominal'],
+            'ppnrp' => format_uang($summary['ppn_nominal']),
+            'bayar' => $summary['grand_total'],
+            'bayarrp' => format_uang($summary['grand_total']),
+            'dibayar' => $summary['dibayar'],
+            'dibayarrp' => format_uang($summary['dibayar']),
+            'sisa' => $summary['sisa'],
+            'sisarp' => format_uang($summary['sisa']),
+            'terbilang' => ucwords(terbilang($summary['grand_total']). ' Rupiah')
         ];
 
         return response()->json($data);

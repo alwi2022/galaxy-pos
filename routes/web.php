@@ -8,8 +8,10 @@ use App\Http\Controllers\{
     ProdukController,
     MemberController,
     PengeluaranController,
+    PendapatanLainController,
     PembelianController,
     PembelianDetailController,
+    PembayaranController,
     PenjualanController,
     PenjualanDetailController,
     SettingController,
@@ -77,6 +79,8 @@ Route::group(['middleware' => 'auth'], function () {
 
         Route::get('/pengeluaran/data', [PengeluaranController::class, 'data'])->name('pengeluaran.data');
         Route::resource('/pengeluaran', PengeluaranController::class)->middleware('cabang');
+        Route::get('/pendapatan-lain/data', [PendapatanLainController::class, 'data'])->name('pendapatan-lain.data');
+        Route::resource('/pendapatan-lain', PendapatanLainController::class)->except('create', 'edit');
 
         Route::get('/pembelian/data', [PembelianController::class, 'data'])->name('pembelian.data');
         Route::get('/pembelian/{id}/create', [PembelianController::class, 'create'])->name('pembelian.create');
@@ -84,7 +88,7 @@ Route::group(['middleware' => 'auth'], function () {
             ->except('create');
 
         Route::get('/pembelian_detail/{id}/data', [PembelianDetailController::class, 'data'])->name('pembelian_detail.data');
-        Route::get('/pembelian_detail/loadform/{diskon}/{total}', [PembelianDetailController::class, 'loadForm'])->name('pembelian_detail.load_form');
+        Route::get('/pembelian_detail/loadform/{diskon}/{total}/{dibayar?}', [PembelianDetailController::class, 'loadForm'])->name('pembelian_detail.load_form');
         Route::resource('/pembelian_detail', PembelianDetailController::class)
             ->except('create', 'show', 'edit');
 
@@ -110,13 +114,21 @@ Route::group(['middleware' => 'auth'], function () {
         Route::resource('/transaksi', PenjualanDetailController::class)
             ->except('create', 'show', 'edit');
 
-            
+        Route::get('/pembayaran', [PembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::get('/pembayaran/piutang/data', [PembayaranController::class, 'piutangData'])->name('pembayaran.piutang.data');
+        Route::get('/pembayaran/piutang/{id}', [PembayaranController::class, 'showPiutang'])->name('pembayaran.piutang.show');
+        Route::post('/pembayaran/piutang/{id}', [PembayaranController::class, 'storePiutang'])->name('pembayaran.piutang.store');
     });
 
     Route::group(['middleware' => 'level:1'], function () {
         Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('/laporan/data/{awal}/{akhir}', [LaporanController::class, 'data'])->name('laporan.data');
         Route::get('/laporan/pdf/{awal}/{akhir}', [LaporanController::class, 'exportPDF'])->name('laporan.export_pdf');
+        Route::get('/laporan/excel/{tab}/{awal}/{akhir}', [LaporanController::class, 'exportExcel'])->name('laporan.export_excel');
+
+        Route::get('/pembayaran/hutang/data', [PembayaranController::class, 'hutangData'])->name('pembayaran.hutang.data');
+        Route::get('/pembayaran/hutang/{id}', [PembayaranController::class, 'showHutang'])->name('pembayaran.hutang.show');
+        Route::post('/pembayaran/hutang/{id}', [PembayaranController::class, 'storeHutang'])->name('pembayaran.hutang.store');
 
         Route::get('/user/data', [UserController::class, 'data'])->name('user.data');
         Route::resource('/user', UserController::class);

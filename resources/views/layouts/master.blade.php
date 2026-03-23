@@ -37,6 +37,60 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
 
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+            border: 0;
+        }
+
+        .table-responsive > .table {
+            margin-bottom: 0;
+            min-width: 100%;
+        }
+
+        .box .box-header.with-border {
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .content .box {
+            border-top: 3px solid #d8dee9;
+        }
+
+        .toolbar-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toolbar-inline .form-control {
+            min-width: 160px;
+        }
+
+        .summary-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #fff;
+            padding: 16px;
+        }
+
+        @media (max-width: 767px) {
+            .content-header h1 {
+                font-size: 24px;
+                line-height: 1.3;
+            }
+
+            .toolbar-inline {
+                align-items: stretch;
+            }
+
+            .toolbar-inline .btn,
+            .toolbar-inline .form-control {
+                width: 100%;
+            }
+        }
+    </style>
+
     @stack('css')
 </head>
 <body class="hold-transition skin-purple-light sidebar-mini">
@@ -135,6 +189,16 @@
         title: 'Informasi',
         text: '{{ session('alert') }}',
         confirmButtonText: 'OK'
+    });
+</script>
+@endif
+
+@if ($errors->any())
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Validasi Gagal',
+        text: @json($errors->first())
     });
 </script>
 @endif

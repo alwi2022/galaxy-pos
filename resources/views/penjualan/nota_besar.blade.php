@@ -136,19 +136,35 @@
             </tr>
             <tr class="total-section">
                 <td colspan="6" class="text-right"><strong>Diskon</strong></td>
-                <td class="text-right"><strong>{{ format_uang($penjualan->diskon) }}</strong></td>
+                <td class="text-right"><strong>{{ $penjualan->diskon }}% / {{ format_uang(hitung_diskon_nominal($penjualan->total_harga, $penjualan->diskon)) }}</strong></td>
+            </tr>
+            <tr class="total-section">
+                <td colspan="6" class="text-right"><strong>DPP</strong></td>
+                <td class="text-right"><strong>{{ format_uang($penjualan->total_harga - hitung_diskon_nominal($penjualan->total_harga, $penjualan->diskon)) }}</strong></td>
+            </tr>
+            <tr class="total-section">
+                <td colspan="6" class="text-right"><strong>PPN</strong></td>
+                <td class="text-right"><strong>{{ $penjualan->ppn_persen ?? 0 }}% / {{ format_uang($penjualan->ppn_nominal ?? 0) }}</strong></td>
             </tr>
             <tr class="total-highlight">
-                <td colspan="6" class="text-right"><strong>Total Bayar</strong></td>
+                <td colspan="6" class="text-right"><strong>Tagihan</strong></td>
                 <td class="text-right"><strong>{{ format_uang($penjualan->bayar) }}</strong></td>
             </tr>
             <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>Diterima</strong></td>
-                <td class="text-right"><strong>{{ format_uang($penjualan->diterima) }}</strong></td>
+                <td colspan="6" class="text-right"><strong>Terbayar</strong></td>
+                <td class="text-right"><strong>{{ format_uang($penjualan->dibayar) }}</strong></td>
             </tr>
             <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>Kembali</strong></td>
-                <td class="text-right"><strong>{{ format_uang($penjualan->diterima - $penjualan->bayar) }}</strong></td>
+                <td colspan="6" class="text-right"><strong>Sisa</strong></td>
+                <td class="text-right"><strong>{{ format_uang($penjualan->sisa) }}</strong></td>
+            </tr>
+            <tr class="total-section">
+                <td colspan="6" class="text-right"><strong>Metode</strong></td>
+                <td class="text-right"><strong>{{ label_metode_pembayaran($penjualan->metode_pembayaran) }}</strong></td>
+            </tr>
+            <tr class="total-section">
+                <td colspan="6" class="text-right"><strong>Status</strong></td>
+                <td class="text-right"><strong>{{ label_status_pembayaran($penjualan->status_pembayaran) }}</strong></td>
             </tr>
         </tfoot>
     </table>

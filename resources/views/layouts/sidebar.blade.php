@@ -2,7 +2,7 @@
     <section class="sidebar">
         @php
             $masterOpen = request()->routeIs('kategori.*', 'produk.*', 'member.*', 'supplier.*');
-            $transaksiOpen = request()->routeIs('transaksi.*', 'pengeluaran.*', 'pembelian.*', 'penjualan.*');
+            $transaksiOpen = request()->routeIs('transaksi.*', 'pengeluaran.*', 'pendapatan-lain.*', 'pembelian.*', 'penjualan.*', 'pembayaran.*');
             $servisOpen = request()->routeIs('servis.*');
             $systemOpen = request()->routeIs('user.*', 'setting.*');
             $cabangOpen = request()->routeIs('cabang.*', 'user.pindah_cabang', 'user.update_cabang');
@@ -50,8 +50,10 @@
                 <ul class="treeview-menu">
                 <li class="{{ request()->routeIs('transaksi.index') ? 'active' : '' }}"><a href="{{ route('transaksi.index') }}"><i class="fa fa-cart-arrow-down"></i> Transaksi Aktif</a></li>
                 <li class="{{ request()->routeIs('transaksi.baru') ? 'active' : '' }}"><a href="{{ route('transaksi.baru') }}"><i class="fa fa-plus-square"></i> Transaksi Baru</a></li>
+                <li class="{{ request()->routeIs('pembayaran.*') ? 'active' : '' }}"><a href="{{ route('pembayaran.index') }}"><i class="fa fa-credit-card"></i> Pembayaran</a></li>
                 @if (auth()->user()->level == 1)
-                    <li class="{{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}"><a href="{{ route('pengeluaran.index') }}"><i class="fa fa-money"></i> Pengeluaran</a></li>
+                    <li class="{{ request()->routeIs('pendapatan-lain.*') ? 'active' : '' }}"><a href="{{ route('pendapatan-lain.index') }}"><i class="fa fa-line-chart"></i> Pendapatan Lain</a></li>
+                    <li class="{{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}"><a href="{{ route('pengeluaran.index') }}"><i class="fa fa-money"></i> Biaya Operasional</a></li>
                     <li class="{{ request()->routeIs('pembelian.*', 'pembelian_detail.*') ? 'active' : '' }}"><a href="{{ route('pembelian.index') }}"><i class="fa fa-download"></i> Pembelian</a></li>
                     <li class="{{ request()->routeIs('penjualan.*') ? 'active' : '' }}"><a href="{{ route('penjualan.index') }}"><i class="fa fa-upload"></i> Penjualan</a></li>
                     @endif

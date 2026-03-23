@@ -59,3 +59,110 @@ function tambah_nol_didepan($value, $threshold = null)
 {
     return sprintf("%0". $threshold . "s", $value);
 }
+
+function daftar_metode_pembayaran()
+{
+    return [
+        'tunai' => 'Tunai',
+        'transfer_bank' => 'Bank / Transfer',
+        'qris' => 'QRIS',
+    ];
+}
+
+function label_metode_pembayaran($value)
+{
+    $options = daftar_metode_pembayaran();
+
+    return $options[$value] ?? ucfirst(str_replace('_', ' ', $value));
+}
+
+function daftar_skema_pembayaran()
+{
+    return [
+        'langsung' => 'Langsung',
+        'kredit' => 'Kredit / Hutang',
+    ];
+}
+
+function label_skema_pembayaran($value)
+{
+    $options = daftar_skema_pembayaran();
+
+    return $options[$value] ?? ucfirst(str_replace('_', ' ', $value));
+}
+
+function status_pembayaran($totalTagihan, $dibayar)
+{
+    if ((int) $totalTagihan <= 0 || (int) $dibayar <= 0) {
+        return 'belum_bayar';
+    }
+
+    if ((int) $dibayar >= (int) $totalTagihan) {
+        return 'lunas';
+    }
+
+    return 'sebagian';
+}
+
+function label_status_pembayaran($value)
+{
+    $options = [
+        'belum_bayar' => 'Belum Bayar',
+        'sebagian' => 'Bayar Sebagian',
+        'lunas' => 'Lunas',
+    ];
+
+    return $options[$value] ?? ucfirst(str_replace('_', ' ', $value));
+}
+
+function class_status_pembayaran($value)
+{
+    $options = [
+        'belum_bayar' => 'label-danger',
+        'sebagian' => 'label-warning',
+        'lunas' => 'label-success',
+    ];
+
+    return $options[$value] ?? 'label-default';
+}
+
+function daftar_kategori_pengeluaran()
+{
+    return [
+        'listrik' => 'Listrik',
+        'atk' => 'ATK',
+        'gaji_karyawan' => 'Gaji Karyawan',
+        'operasional_lainnya' => 'Operasional Lainnya',
+    ];
+}
+
+function label_kategori_pengeluaran($value)
+{
+    $options = daftar_kategori_pengeluaran();
+
+    return $options[$value] ?? ucfirst(str_replace('_', ' ', $value));
+}
+
+function daftar_kategori_pendapatan_lain()
+{
+    return [
+        'penjualan_barang_bekas' => 'Penjualan Barang Bekas',
+        'penjualan_kardus_bekas' => 'Penjualan Kardus Bekas',
+        'pendapatan_lain_lain' => 'Pendapatan Lain-lain',
+    ];
+}
+
+function label_kategori_pendapatan_lain($value)
+{
+    $options = daftar_kategori_pendapatan_lain();
+
+    return $options[$value] ?? ucfirst(str_replace('_', ' ', $value));
+}
+
+function hitung_diskon_nominal($subtotal, $diskonPersen = 0)
+{
+    $subtotal = max((int) $subtotal, 0);
+    $diskonPersen = max((float) $diskonPersen, 0);
+
+    return (int) round($subtotal * $diskonPersen / 100);
+}

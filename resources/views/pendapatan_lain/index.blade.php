@@ -1,12 +1,12 @@
 @extends('layouts.master')
 
 @section('title')
-    Biaya Operasional
+    Pendapatan Lain
 @endsection
 
 @section('breadcrumb')
     @parent
-    <li class="active">Biaya Operasional</li>
+    <li class="active">Pendapatan Lain</li>
 @endsection
 
 @section('content')
@@ -15,12 +15,12 @@
         <div class="box">
             <div class="box-header with-border">
                 <div class="toolbar-inline">
-                    <button onclick="addForm('{{ route('pengeluaran.store') }}')" class="btn btn-success btn-sm btn-flat"><i class="fa fa-plus-circle"></i> Tambah Biaya</button>
-                    <span class="text-muted">Catat biaya seperti listrik, ATK, gaji, dan operasional lain secara manual.</span>
+                    <button onclick="addForm('{{ route('pendapatan-lain.store') }}')" class="btn btn-success btn-sm btn-flat"><i class="fa fa-plus-circle"></i> Tambah Pendapatan</button>
+                    <span class="text-muted">Contoh penggunaan: penjualan barang bekas, kardus bekas, atau pemasukan lain-lain.</span>
                 </div>
             </div>
             <div class="box-body table-responsive">
-                <table class="table table-striped table-bordered table-biaya">
+                <table class="table table-striped table-bordered table-pendapatan">
                     <thead>
                         <th width="5%">No</th>
                         <th>Tanggal</th>
@@ -36,7 +36,7 @@
     </div>
 </div>
 
-@includeIf('pengeluaran.form')
+@includeIf('pendapatan_lain.form')
 @endsection
 
 @push('scripts')
@@ -44,19 +44,19 @@
     let table;
 
     $(function () {
-        table = $('.table-biaya').DataTable({
+        table = $('.table-pendapatan').DataTable({
             responsive: false,
             processing: true,
             serverSide: true,
             autoWidth: false,
             scrollX: true,
             ajax: {
-                url: '{{ route('pengeluaran.data') }}',
+                url: '{{ route('pendapatan-lain.data') }}',
             },
             columns: [
                 {data: 'DT_RowIndex', searchable: false, sortable: false},
-                {data: 'tanggal_pengeluaran'},
-                {data: 'kategori_pengeluaran'},
+                {data: 'tanggal_pendapatan'},
+                {data: 'kategori_pendapatan'},
                 {data: 'deskripsi'},
                 {data: 'metode_pembayaran'},
                 {data: 'nominal'},
@@ -87,9 +87,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal!',
-                            text: message,
-                            confirmButtonText: 'OK',
-                            confirmButtonColor: '#d33'
+                            text: message
                         });
                     });
             }
@@ -98,30 +96,29 @@
 
     function addForm(url) {
         $('#modal-form').modal('show');
-        $('#modal-form .modal-title').text('Tambah Biaya Operasional');
+        $('#modal-form .modal-title').text('Tambah Pendapatan Lain');
 
         $('#modal-form form')[0].reset();
         $('#modal-form form').attr('action', url);
         $('#modal-form [name=_method]').val('post');
-        $('#modal-form [name=tanggal_pengeluaran]').val('{{ date('Y-m-d') }}');
-        $('#modal-form [name=kategori_pengeluaran]').val('operasional_lainnya');
+        $('#modal-form [name=tanggal_pendapatan]').val('{{ date('Y-m-d') }}');
+        $('#modal-form [name=kategori_pendapatan]').val('pendapatan_lain_lain');
         $('#modal-form [name=metode_pembayaran]').val('tunai');
         $('#modal-form [name=deskripsi]').focus();
     }
 
     function editForm(url) {
         $('#modal-form').modal('show');
-        $('#modal-form .modal-title').text('Edit Biaya Operasional');
+        $('#modal-form .modal-title').text('Edit Pendapatan Lain');
 
         $('#modal-form form')[0].reset();
         $('#modal-form form').attr('action', url);
         $('#modal-form [name=_method]').val('put');
-        $('#modal-form [name=deskripsi]').focus();
 
         $.get(url)
             .done((response) => {
-                $('#modal-form [name=tanggal_pengeluaran]').val(response.tanggal_pengeluaran);
-                $('#modal-form [name=kategori_pengeluaran]').val(response.kategori_pengeluaran);
+                $('#modal-form [name=tanggal_pendapatan]').val(response.tanggal_pendapatan);
+                $('#modal-form [name=kategori_pendapatan]').val(response.kategori_pendapatan);
                 $('#modal-form [name=deskripsi]').val(response.deskripsi);
                 $('#modal-form [name=metode_pembayaran]').val(response.metode_pembayaran);
                 $('#modal-form [name=nominal]').val(response.nominal);
@@ -130,9 +127,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal!',
-                    text: 'Tidak dapat menampilkan data.',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#d33'
+                    text: 'Tidak dapat menampilkan data.'
                 });
             });
     }
@@ -151,29 +146,27 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 $.post(url, {
-                        '_token': $('[name=csrf-token]').attr('content'),
-                        '_method': 'delete'
-                    })
-                    .done(() => {
-                        table.ajax.reload();
+                    '_token': $('[name=csrf-token]').attr('content'),
+                    '_method': 'delete'
+                })
+                .done(() => {
+                    table.ajax.reload();
 
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Data berhasil dihapus.',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    })
-                    .fail(() => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal!',
-                            text: 'Tidak dapat menghapus data.',
-                            confirmButtonText: 'OK',
-                            confirmButtonColor: '#d33'
-                        });
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Data berhasil dihapus.',
+                        timer: 1500,
+                        showConfirmButton: false
                     });
+                })
+                .fail(() => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: 'Tidak dapat menghapus data.'
+                    });
+                });
             }
         });
     }

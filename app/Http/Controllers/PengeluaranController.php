@@ -16,17 +16,24 @@ class PengeluaranController extends Controller
     public function data()
     {
         $pengeluaran = Pengeluaran::where('id_cabang', auth()->user()->id_cabang)
-            ->orderBy('id_pengeluaran', 'desc')
+            ->orderByDesc('tanggal_pengeluaran')
+            ->orderByDesc('id_pengeluaran')
             ->get();
 
         return datatables()
             ->of($pengeluaran)
             ->addIndexColumn()
-            ->addColumn('created_at', function ($pengeluaran) {
-                return tanggal_indonesia($pengeluaran->created_at, false);
+            ->addColumn('tanggal_pengeluaran', function ($pengeluaran) {
+                return tanggal_indonesia($pengeluaran->tanggal_pengeluaran, false);
+            })
+            ->addColumn('kategori_pengeluaran', function ($pengeluaran) {
+                return label_kategori_pengeluaran($pengeluaran->kategori_pengeluaran);
             })
             ->addColumn('nominal', function ($pengeluaran) {
                 return format_uang($pengeluaran->nominal);
+            })
+            ->addColumn('metode_pembayaran', function ($pengeluaran) {
+                return label_metode_pembayaran($pengeluaran->metode_pembayaran);
             })
             ->addColumn('aksi', function ($pengeluaran) {
                 return '
@@ -58,11 +65,9 @@ class PengeluaranController extends Controller
      */
     public function store(Request $request)
     {
-        $pengeluaran = new Pengeluaran();
-        $pengeluaran->fill($request->all());
-        $pengeluaran->id_cabang = auth()->user()->id_cabang;
-        $pengeluaran->save();
-        
+        $payload = $this->validatePayload($request);
+        $payload['id_cabang'] = auth()->user()->id_cabang;
+        Pengeluaran::create($payload);
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -75,9 +80,18 @@ class PengeluaranController extends Controller
      */
     public function show($id)
     {
-        $pengeluaran = Pengeluaran::find($id);
+        $pengeluaran = Pengeluaran::where('id_pengeluaran', $id)
+            ->where('id_cabang', auth()->user()->id_cabang)
+            ->firstOrFail();
 
-        return response()->json($pengeluaran);
+        return response()->json([
+            'id_pengeluaran' => $pengeluaran->id_pengeluaran,
+            'tanggal_pengeluaran' => optional($pengeluaran->tanggal_pengeluaran)->format('Y-m-d'),
+            'kategori_pengeluaran' => $pengeluaran->kategori_pengeluaran,
+            'deskripsi' => $pengeluaran->deskripsi,
+            'metode_pembayaran' => $pengeluaran->metode_pembayaran,
+            'nominal' => $pengeluaran->nominal,
+        ]);
     }
 
     /**
@@ -100,12 +114,12 @@ class PengeluaranController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $payload = $this->validatePayload($request);
         $pengeluaran = Pengeluaran::where('id_pengeluaran', $id)
-        ->where('id_cabang', auth()->user()->id_cabang)
-        ->firstOrFail();
-    
-    $pengeluaran->update($request->all());
-    
+            ->where('id_cabang', auth()->user()->id_cabang)
+            ->firstOrFail();
+
+        $pengeluaran->update($payload);
 
         return response()->json('Data berhasil disimpan', 200);
     }
@@ -122,8 +136,19 @@ class PengeluaranController extends Controller
         ->where('id_cabang', auth()->user()->id_cabang)
         ->firstOrFail();
     
-    $pengeluaran->delete();
+        $pengeluaran->delete();
 
         return response(null, 204);
+    }
+
+    protected function validatePayload(Request $request): array
+    {
+        return $request->validate([
+            'tanggal_pengeluaran' => 'required|date',
+            'kategori_pengeluaran' => 'required|in:' . implode(',', array_keys(daftar_kategori_pengeluaran())),
+            'deskripsi' => 'required|string|max:500',
+            'nominal' => 'required|integer|min:1',
+            'metode_pembayaran' => 'required|in:tunai,transfer_bank,qris',
+        ]);
     }
 }

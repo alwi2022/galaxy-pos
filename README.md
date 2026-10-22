@@ -32,7 +32,7 @@ Project ini merupakan pengembangan dari https://github.com/nursandiid/tutorial-m
   - Desain nota diperbarui.
 - **Deployment**
   - Aplikasi di-deploy ke AWS dan bisa diakses online.
-  - **Demo**: [https://alwi.biz.id/login](https://alwi.biz.id/login)
+  - **Demo**: [https://point-of-sale-a0143e453f08.herokuapp.com/login](https://point-of-sale-a0143e453f08.herokuapp.com/login)
 
 ---
 
@@ -164,4 +164,4 @@ Panduan modul stok, retur, kas/bank, modal, pinjaman, aset, pembayaran di muka, 
 
 ---
 
-**Demo Aplikasi:** [https://alwi.biz.id/login](https://alwi.biz.id/login)
+**Demo Aplikasi:** [https://point-of-sale-a0143e453f08.herokuapp.com/login](https://point-of-sale-a0143e453f08.herokuapp.com/login)

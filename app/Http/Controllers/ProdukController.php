@@ -85,10 +85,23 @@ class ProdukController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate(['nama_produk' => 'required|string|max:255|unique:produk,nama_produk', 'id_kategori' => 'required|integer', 'harga_beli' => 'required|integer|min:0|max:2000000000', 'harga_jual' => 'required|integer|min:0|max:2000000000', 'stok' => 'required|integer|min:0|max:1000000', 'diskon' => 'nullable|integer|min:0|max:100']);
+        abort_unless(Kategori::where('id_cabang', auth()->user()->id_cabang)->where('id_kategori', $request->id_kategori)->exists(), 422);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+        $initialStock = (int) $request->stok;
         $produk = Produk::latest()->first() ?? new Produk();
         $request['kode_produk'] = 'P'. tambah_nol_didepan((int)$produk->id_produk +1, 6);
         $request['id_cabang'] = auth()->user()->id_cabang;
-        $produk = Produk::create($request->all());
+        $produk = Produk::create($request->only(['nama_produk', 'id_kategori', 'merk', 'harga_beli', 'harga_jual', 'diskon', 'kode_produk', 'id_cabang']) + ['stok' => 0]);
+        if ($initialStock > 0) {
+            $ref = 'OPEN-PRODUCT-' . $produk->id_produk;
+            app(\App\Services\StockLedgerService::class)->move(auth()->user()->id_cabang, $produk->id_produk, $initialStock, $ref, 'Stok awal produk', now()->toDateTimeString(), (int) $produk->harga_beli);
+            $value = $initialStock * $produk->harga_beli;
+            if ($value > 0) {
+                app(\App\Services\LedgerService::class)->post(auth()->user()->id_cabang, now()->toDateString(), $ref, 'Stok awal ' . $produk->nama_produk, [['1301', $value, 0], ['3101', 0, $value]]);
+            }
+        }
+        });
 
         return back()->with('success', 'Data berhasil disimpan');
     }
@@ -126,9 +139,21 @@ class ProdukController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $produk = Produk::find($id);
-        $produk->id_cabang = auth()->user()->id_cabang;
-        $produk->update($request->all());
+        $request->validate(['nama_produk' => 'required|string|max:255|unique:produk,nama_produk,' . (int) $id . ',id_produk', 'id_kategori' => 'required|integer', 'harga_beli' => 'required|integer|min:0|max:2000000000', 'harga_jual' => 'required|integer|min:0|max:2000000000', 'stok' => 'required|integer|min:0|max:1000000', 'diskon' => 'nullable|integer|min:0|max:100']);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+            $produk = Produk::where('id_cabang', auth()->user()->id_cabang)->lockForUpdate()->findOrFail($id);
+            abort_unless(Kategori::where('id_cabang', auth()->user()->id_cabang)->where('id_kategori', $request->id_kategori)->exists(), 422);
+            if ((int) $request->stok !== (int) $produk->stok) {
+                app(\App\Services\StockLedgerService::class)->adjustment(auth()->user()->id_cabang, $produk->id_produk, (int) $request->stok, 'opname', 'Penyesuaian melalui master produk', now()->toDateTimeString());
+            }
+            if ((int) $request->harga_beli !== (int) $produk->harga_beli && $produk->stok > 0) {
+                app(\App\Services\LedgerService::class)->fail('Harga modal stok aktif dihitung dari pembelian. Ubah melalui transaksi pembelian.');
+            }
+            $produk->update($request->only(['nama_produk', 'id_kategori', 'merk', 'harga_jual', 'diskon']));
+            if ((int) $produk->stok === 0) {
+                $produk->update(['harga_beli' => (int) $request->harga_beli]);
+            }
+        });
 
         return back()->with('success', 'Data berhasil disimpan');
     }
@@ -141,7 +166,10 @@ class ProdukController extends Controller
      */
     public function destroy($id)
     {
-        $produk = Produk::find($id);
+        $produk = Produk::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
+        if ($produk->stok > 0 || \Illuminate\Support\Facades\DB::table('stock_movements')->where('id_produk', $id)->exists()) {
+            app(\App\Services\LedgerService::class)->fail('Produk yang memiliki stok atau riwayat transaksi tidak dapat dihapus.');
+        }
         $produk->delete();
 
         return back()->with('success', 'Data berhasil dihapus');
@@ -150,8 +178,7 @@ class ProdukController extends Controller
     public function deleteSelected(Request $request)
     {
         foreach ($request->id_produk as $id) {
-            $produk = Produk::find($id);
-            $produk->delete();
+            $this->destroy($id);
         }
 
         return back()->with('success', 'Data berhasil dihapus');

@@ -145,6 +145,8 @@ php artisan serve
 
 ## Screenshot
 
+Panduan modul stok, retur, kas/bank, modal, pinjaman, aset, pembayaran di muka, dan akuntansi tersedia di [Operasional & Keuangan](docs/OPERASIONAL-KEUANGAN.md).
+
 - **Halaman Login**  
   ![Login Page](public/screenshots/login.png)
 

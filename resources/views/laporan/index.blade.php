@@ -4,24 +4,6 @@
     Laporan {{ tanggal_indonesia($tanggalAwal, false) }} s/d {{ tanggal_indonesia($tanggalAkhir, false) }}
 @endsection
 
-@push('css')
-<style>
-    .report-filter {
-        padding: 16px;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        background: #fff;
-    }
-
-    .report-filter .toolbar-inline {
-        margin-bottom: 10px;
-    }
-
-    .nav-tabs-custom > .nav-tabs > li > a {
-        font-weight: 600;
-    }
-</style>
-@endpush
 
 @section('breadcrumb')
     @parent
@@ -31,22 +13,21 @@
 @section('content')
 <div class="row">
     <div class="col-lg-12">
-        <div class="report-filter">
+        <x-filter-panel>
             <div class="toolbar-inline">
                 <label for="tanggal_awal" class="control-label" style="margin-bottom: 0;">Tanggal Awal</label>
-                <input type="date" id="tanggal_awal" class="form-control" value="{{ $tanggalAwal }}">
+                <input type="date" id="tanggal_awal" class="form-control input-sm" value="{{ $tanggalAwal }}">
                 <label for="tanggal_akhir" class="control-label" style="margin-bottom: 0;">Tanggal Akhir</label>
-                <input type="date" id="tanggal_akhir" class="form-control" value="{{ $tanggalAkhir }}">
-                <button type="button" onclick="applyPeriode()" class="btn btn-primary btn-flat"><i class="fa fa-filter"></i> Terapkan</button>
-                <a href="{{ route('laporan.export_pdf', [$tanggalAwal, $tanggalAkhir]) }}" target="_blank" class="btn btn-default btn-flat"><i class="fa fa-file-pdf-o"></i> Export PDF Ringkasan</a>
-                <a href="#" id="link-export-excel" class="btn btn-success btn-flat"><i class="fa fa-file-excel-o"></i> Export Excel Tab Aktif</a>
+                <input type="date" id="tanggal_akhir" class="form-control input-sm" value="{{ $tanggalAkhir }}">
+                <button type="button" onclick="applyPeriode()" class="btn btn-primary btn-sm btn-flat"><i class="fa fa-filter"></i> Terapkan</button>
+                <a href="{{ route('laporan.export_pdf', [$tanggalAwal, $tanggalAkhir]) }}" target="_blank" class="btn btn-default btn-sm btn-flat"><i class="fa fa-file-pdf-o"></i> Export PDF Ringkasan</a>
+                <a href="#" id="link-export-excel" class="btn btn-success btn-sm btn-flat"><i class="fa fa-file-excel-o"></i> Export Excel Tab Aktif</a>
             </div>
-            <small class="text-muted">Export Excel mengikuti tab laporan yang sedang aktif. Ringkasan PDF tetap tersedia untuk kebutuhan cetak cepat.</small>
-        </div>
+        </x-filter-panel>
     </div>
 </div>
 
-<div class="row" style="margin-top: 16px;">
+<div class="row">
     <div class="col-lg-12">
         <div class="nav-tabs-custom">
             <ul class="nav nav-tabs">
@@ -68,7 +49,7 @@
                                 <th>Pendapatan Lain</th>
                                 <th>Servis</th>
                                 <th>Biaya</th>
-                                <th>Pendapatan Bersih</th>
+                                <th>Selisih Kas Transaksi</th>
                             </thead>
                         </table>
                     </div>
@@ -323,6 +304,8 @@
 
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
             activeTab = $(e.target).data('tab');
+            $('[data-report-tab]').each(function () { $(this).parent().toggleClass('active', $(this).data('report-tab') === activeTab); });
+            $.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
             syncExportLink();
         });
 

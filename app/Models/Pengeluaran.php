@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pengeluaran extends Model
 {
+    use \App\Models\Concerns\PostsCashRecord;
     use HasFactory;
 
     protected $table = 'pengeluaran';

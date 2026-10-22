@@ -208,7 +208,7 @@ class LaporanController extends Controller
     {
         if ($tab === 'ringkasan') {
             return [
-                ['Tanggal', 'Penjualan Masuk', 'Pembelian Keluar', 'Pendapatan Lain', 'Servis', 'Biaya', 'Pendapatan Bersih'],
+                ['Tanggal', 'Penjualan Masuk', 'Pembelian Keluar', 'Pendapatan Lain', 'Servis', 'Biaya', 'Selisih Kas Transaksi'],
                 collect($rows)->map(function ($row) {
                     return [
                         $row['tanggal'],

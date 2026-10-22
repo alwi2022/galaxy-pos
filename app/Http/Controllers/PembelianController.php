@@ -37,6 +37,7 @@ class PembelianController extends Controller
         $pembelian = Pembelian::with('supplier')
             ->where('id_cabang', auth()->user()->id_cabang)
             ->where('total_item', '>', 0)
+            ->whereNull('cancelled_at')
             ->orderBy('id_pembelian', 'desc')
             ->get();
 
@@ -141,7 +142,11 @@ class PembelianController extends Controller
 
         DB::transaction(function () use ($request, $nominalDibayar) {
             $pembelian = Pembelian::where('id_cabang', auth()->user()->id_cabang)
+                ->lockForUpdate()
                 ->findOrFail($request->id_pembelian);
+            if ($pembelian->posted_at || $pembelian->cancelled_at) {
+                app(\App\Services\LedgerService::class)->fail('Transaksi sudah final atau dibatalkan.');
+            }
             $detail = PembelianDetail::where('id_pembelian', $pembelian->id_pembelian)->get();
             $ppnPersen = Setting::resolvePpnPersen($pembelian->ppn_persen);
 
@@ -181,11 +186,7 @@ class PembelianController extends Controller
             $pembelian->jatuh_tempo = $request->skema_pembayaran === 'kredit' ? $request->jatuh_tempo : null;
             $pembelian->update();
 
-            foreach ($detail as $item) {
-                $produk = Produk::find($item->id_produk);
-                $produk->stok += $item->jumlah;
-                $produk->update();
-            }
+            app(\App\Services\BusinessTransactionService::class)->post('pembelian', $pembelian->id_pembelian, auth()->user()->id_cabang);
 
             if ($summary['dibayar'] > 0) {
                 PembelianPembayaran::create([
@@ -234,19 +235,7 @@ class PembelianController extends Controller
 
     public function destroy($id)
     {
-        $pembelian = Pembelian::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
-        $detail = PembelianDetail::where('id_pembelian', $pembelian->id_pembelian)->get();
-        foreach ($detail as $item) {
-            $produk = Produk::find($item->id_produk);
-            if ($produk) {
-                $produk->stok -= $item->jumlah;
-                $produk->update();
-            }
-            $item->delete();
-        }
-
-        PembelianPembayaran::where('id_pembelian', $pembelian->id_pembelian)->delete();
-        $pembelian->delete();
+        app(\App\Services\BusinessTransactionService::class)->cancel('pembelian', (int) $id, auth()->user()->id_cabang);
 
         return response(null, 204);
     }

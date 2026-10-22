@@ -33,6 +33,7 @@ class PenjualanController extends Controller
         $penjualan = Penjualan::with(['member', 'user'])
             ->where('id_cabang', auth()->user()->id_cabang)
             ->where('total_item', '>', 0)
+            ->whereNull('cancelled_at')
             ->orderBy('id_penjualan', 'desc')
             ->get();
 
@@ -151,7 +152,11 @@ class PenjualanController extends Controller
 
         DB::transaction(function () use ($request, $nominalDiterima) {
             $penjualan = Penjualan::where('id_cabang', auth()->user()->id_cabang)
+                ->lockForUpdate()
                 ->findOrFail($request->id_penjualan);
+            if ($penjualan->posted_at || $penjualan->cancelled_at) {
+                app(\App\Services\LedgerService::class)->fail('Transaksi sudah final atau dibatalkan.');
+            }
             $detail = PenjualanDetail::where('id_penjualan', $penjualan->id_penjualan)->get();
             $ppnPersen = Setting::resolvePpnPersen($penjualan->ppn_persen);
 
@@ -194,14 +199,7 @@ class PenjualanController extends Controller
             $penjualan->id_cabang = auth()->user()->id_cabang;
             $penjualan->update();
 
-            foreach ($detail as $item) {
-                $item->diskon = $request->diskon;
-                $item->update();
-
-                $produk = Produk::find($item->id_produk);
-                $produk->stok -= $item->jumlah;
-                $produk->update();
-            }
+            app(\App\Services\BusinessTransactionService::class)->post('penjualan', $penjualan->id_penjualan, auth()->user()->id_cabang);
 
             if ($summary['dibayar'] > 0) {
                 PenjualanPembayaran::create([
@@ -253,20 +251,7 @@ class PenjualanController extends Controller
 
     public function destroy($id)
     {
-        $penjualan = Penjualan::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
-        $detail = PenjualanDetail::where('id_penjualan', $penjualan->id_penjualan)->get();
-        foreach ($detail as $item) {
-            $produk = Produk::find($item->id_produk);
-            if ($produk) {
-                $produk->stok += $item->jumlah;
-                $produk->update();
-            }
-
-            $item->delete();
-        }
-
-        PenjualanPembayaran::where('id_penjualan', $penjualan->id_penjualan)->delete();
-        $penjualan->delete();
+        app(\App\Services\BusinessTransactionService::class)->cancel('penjualan', (int) $id, auth()->user()->id_cabang);
 
         return response(null, 204);
     }

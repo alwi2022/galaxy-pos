@@ -18,6 +18,11 @@ class Pembelian extends Model
         'ppn_persen' => 'float',
     ];
 
+    protected static function booted()
+    {
+        static::addGlobalScope('active', fn ($q) => $q->whereNull('pembelian.cancelled_at'));
+    }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'id_supplier', 'id_supplier');
@@ -34,14 +39,15 @@ class Pembelian extends Model
 
     public function syncStatusPembayaran()
     {
-        $totalTagihan = (int) $this->bayar;
+        $totalTagihan = max((int) $this->bayar - (int) $this->returned_total, 0);
         $dibayar = (int) $this->pembayaran()->sum('nominal');
-        $sisa = max($totalTagihan - $dibayar, 0);
+        $netPaid = max($dibayar - (int) $this->refunded_total, 0);
+        $sisa = max($totalTagihan - $netPaid, 0);
 
         $this->forceFill([
             'dibayar' => $dibayar,
             'sisa' => $sisa,
-            'status_pembayaran' => status_pembayaran($totalTagihan, $dibayar),
+            'status_pembayaran' => status_pembayaran($totalTagihan, $netPaid),
         ])->save();
 
         return $this->refresh();

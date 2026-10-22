@@ -64,7 +64,26 @@
         }
 
         .toolbar-inline .form-control {
+            width: auto;
             min-width: 160px;
+        }
+
+        .toolbar-inline label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            margin: 0 6px;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 6px;
+        }
+
+        .user-panel > .info small {
+            font-size: 11px;
+            margin-right: 8px;
         }
 
         .summary-card {

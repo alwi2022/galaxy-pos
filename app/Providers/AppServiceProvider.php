@@ -33,6 +33,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        \App\Models\PenjualanPembayaran::created(function ($payment) {
+            app(\App\Services\BusinessTransactionService::class)->payment('penjualan', $payment);
+        });
+        \App\Models\PembelianPembayaran::created(function ($payment) {
+            app(\App\Services\BusinessTransactionService::class)->payment('pembelian', $payment);
+        });
         if (app()->environment('production') && str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }

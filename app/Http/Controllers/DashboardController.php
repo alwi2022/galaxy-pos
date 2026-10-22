@@ -33,15 +33,10 @@ class DashboardController extends Controller
             $data_tanggal = [];
             $data_pendapatan = [];
 
-            while (strtotime($tanggal_awal) <= strtotime($tanggal_akhir)) {
-                $data_tanggal[] = (int) substr($tanggal_awal, 8, 2);
-                $penjualan = PenjualanPembayaran::where('id_cabang', $id_cabang)->whereDate('created_at', $tanggal_awal)->sum('nominal');
-                $pembelian = PembelianPembayaran::where('id_cabang', $id_cabang)->whereDate('created_at', $tanggal_awal)->sum('nominal');
-                $pendapatanLain = PendapatanLain::where('id_cabang', $id_cabang)->whereDate('tanggal_pendapatan', $tanggal_awal)->sum('nominal');
-                $pengeluaran = Pengeluaran::where('id_cabang', $id_cabang)->whereDate('tanggal_pengeluaran', $tanggal_awal)->sum('nominal');
-
-                $data_pendapatan[] = $penjualan + $pendapatanLain - $pembelian - $pengeluaran;
-                $tanggal_awal = date('Y-m-d', strtotime('+1 day', strtotime($tanggal_awal)));
+            $summary = app(\App\Services\LaporanService::class)->ringkasan($tanggal_awal, $tanggal_akhir, $id_cabang);
+            foreach ($summary as $index => $row) {
+                $data_tanggal[] = $index + 1;
+                $data_pendapatan[] = $row['pendapatan_bersih'];
             }
 
             return view('admin.dashboard', compact(

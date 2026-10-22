@@ -6,14 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Servis extends Model
-{   
+{
+    use \App\Models\Concerns\PostsServiceInvoice;
     protected $table = 'servis';
     protected $primaryKey = 'id_servis';
     protected $fillable = [
         'kode_servis', 'nama_pelanggan', 'telepon', 'id_member', 'keluhan',
         'tipe_barang', 'merk', 'kerusakan', 'status', 'biaya_servis',
         'teknisi', 'garansi_hari', 'tanggal_masuk', 'tanggal_selesai',
-        'id_cabang', 'id_user'
+        'id_cabang', 'id_user', 'jatuh_tempo'
     ];
 
     public function member() {

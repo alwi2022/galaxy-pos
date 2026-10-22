@@ -56,6 +56,11 @@
                     </div>
 
                     <div class="form-group row">
+                        <label class="col-lg-3 control-label">Jatuh Tempo Pembayaran</label>
+                        <div class="col-lg-8"><input type="date" name="jatuh_tempo" class="form-control"><p class="help-block">Servis selesai membuat tagihan. Pembayaran dicatat melalui menu Pembayaran Servis.</p></div>
+                    </div>
+
+                    <div class="form-group row">
                         <label class="col-lg-3 control-label">Status</label>
                         <div class="col-lg-8">
                             <select name="status" class="form-control">

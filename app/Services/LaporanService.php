@@ -26,36 +26,31 @@ class LaporanService
 
     public function ringkasan(string $awal, string $akhir, int $idCabang): array
     {
-        $penjualanByDate = PenjualanPembayaran::selectRaw('DATE(created_at) as tanggal, SUM(nominal) as total')
-            ->where('id_cabang', $idCabang)
-            ->whereBetween('created_at', [$awal . ' 00:00:00', $akhir . ' 23:59:59'])
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->pluck('total', 'tanggal');
-
-        $pembelianByDate = PembelianPembayaran::selectRaw('DATE(created_at) as tanggal, SUM(nominal) as total')
-            ->where('id_cabang', $idCabang)
-            ->whereBetween('created_at', [$awal . ' 00:00:00', $akhir . ' 23:59:59'])
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->pluck('total', 'tanggal');
-
-        $pendapatanLainByDate = PendapatanLain::selectRaw('tanggal_pendapatan as tanggal, SUM(nominal) as total')
-            ->where('id_cabang', $idCabang)
-            ->whereBetween('tanggal_pendapatan', [$awal, $akhir])
-            ->groupBy('tanggal_pendapatan')
-            ->pluck('total', 'tanggal');
-
-        $pengeluaranByDate = Pengeluaran::selectRaw('tanggal_pengeluaran as tanggal, SUM(nominal) as total')
-            ->where('id_cabang', $idCabang)
-            ->whereBetween('tanggal_pengeluaran', [$awal, $akhir])
-            ->groupBy('tanggal_pengeluaran')
-            ->pluck('total', 'tanggal');
-
-        $servisByDate = Servis::selectRaw('DATE(tanggal_selesai) as tanggal, SUM(biaya_servis) as total')
-            ->where('id_cabang', $idCabang)
-            ->where('status', 'selesai')
-            ->whereBetween('tanggal_selesai', [$awal . ' 00:00:00', $akhir . ' 23:59:59'])
-            ->groupBy(DB::raw('DATE(tanggal_selesai)'))
-            ->pluck('total', 'tanggal');
+        $penjualanByDate = $pembelianByDate = $pendapatanLainByDate = $pengeluaranByDate = $servisByDate = [];
+        $cashLines = DB::table('ledger_lines as l')
+            ->join('ledger_entries as e', 'e.id', '=', 'l.entry_id')
+            ->join('ledger_accounts as a', 'a.id', '=', 'l.account_id')
+            ->leftJoin('ledger_entries as original', 'original.id', '=', 'e.reversal_of')
+            ->where('e.id_cabang', $idCabang)->where('a.cash_account', true)
+            ->whereBetween('e.date', [$awal, $akhir])
+            ->selectRaw('e.date, COALESCE(original.reference,e.reference) as source, l.debit-l.credit as amount')->get();
+        $returnTypes = DB::table('stock_returns')->where('id_cabang', $idCabang)->pluck('type', 'id');
+        foreach ($cashLines as $line) {
+            $amount = (int) $line->amount;
+            $source = $line->source;
+            $returnType = str_starts_with($source, 'RET-') ? ($returnTypes[(int) substr($source, 4)] ?? '') : '';
+            if (str_starts_with($source, 'PENJUALAN-') || $returnType === 'penjualan') {
+                $penjualanByDate[$line->date] = ($penjualanByDate[$line->date] ?? 0) + $amount;
+            } elseif (str_starts_with($source, 'PEMBELIAN-') || $returnType === 'pembelian') {
+                $pembelianByDate[$line->date] = ($pembelianByDate[$line->date] ?? 0) - $amount;
+            } elseif (str_starts_with($source, 'PENDAPATAN_LAIN-')) {
+                $pendapatanLainByDate[$line->date] = ($pendapatanLainByDate[$line->date] ?? 0) + $amount;
+            } elseif (str_starts_with($source, 'PENGELUARAN-')) {
+                $pengeluaranByDate[$line->date] = ($pengeluaranByDate[$line->date] ?? 0) - $amount;
+            } elseif (str_starts_with($source, 'SERVIS-')) {
+                $servisByDate[$line->date] = ($servisByDate[$line->date] ?? 0) + $amount;
+            }
+        }
 
         $rows = [];
         $no = 1;
@@ -94,7 +89,7 @@ class LaporanService
             ->whereBetween('created_at', [$awal . ' 00:00:00', $akhir . ' 23:59:59'])
             ->orderByDesc('created_at')
             ->get()
-            ->map(function ($penjualan) {
+            ->map(function ($penjualan) use ($akhir) {
                 $totals = $this->calculator->calculateFromSubtotal(
                     (int) $penjualan->total_harga,
                     (float) $penjualan->diskon,
@@ -102,24 +97,25 @@ class LaporanService
                     (int) $penjualan->dibayar
                 );
 
+                $net = $this->invoiceNet($penjualan, 'penjualan', $akhir, $totals);
                 return [
                     'tanggal' => tanggal_indonesia($penjualan->created_at, false),
                     'nomor' => tambah_nol_didepan($penjualan->id_penjualan, 10),
                     'pelanggan' => $penjualan->member->nama ?? 'Umum',
-                    'total_item' => (int) $penjualan->total_item,
-                    'subtotal' => (int) $penjualan->total_harga,
+                    'total_item' => $net['quantity'],
+                    'subtotal' => $net['subtotal'],
                     'diskon_persen' => (float) $penjualan->diskon,
-                    'diskon_nominal' => $totals['diskon_nominal'],
-                    'dpp' => $totals['dpp'],
+                    'diskon_nominal' => $net['discount'],
+                    'dpp' => $net['dpp'],
                     'ppn_persen' => (float) ($penjualan->ppn_persen ?? 0),
-                    'ppn_nominal' => $totals['ppn_nominal'],
-                    'grand_total' => (int) $penjualan->bayar,
-                    'dibayar' => (int) $penjualan->dibayar,
-                    'sisa' => (int) $penjualan->sisa,
+                    'ppn_nominal' => $net['tax'],
+                    'grand_total' => $net['total'],
+                    'dibayar' => $net['paid'],
+                    'sisa' => $net['remaining'],
                     'skema' => label_skema_pembayaran($penjualan->skema_pembayaran),
                     'metode' => label_metode_pembayaran($penjualan->metode_pembayaran),
-                    'status_kode' => $penjualan->status_pembayaran,
-                    'status' => label_status_pembayaran($penjualan->status_pembayaran),
+                    'status_kode' => $net['status'],
+                    'status' => label_status_pembayaran($net['status']),
                     'jatuh_tempo' => $penjualan->jatuh_tempo ? tanggal_indonesia($penjualan->jatuh_tempo, false) : '-',
                     'kasir' => $penjualan->user->name ?? '-',
                 ];
@@ -135,7 +131,7 @@ class LaporanService
             ->whereBetween('created_at', [$awal . ' 00:00:00', $akhir . ' 23:59:59'])
             ->orderByDesc('created_at')
             ->get()
-            ->map(function ($pembelian) {
+            ->map(function ($pembelian) use ($akhir) {
                 $totals = $this->calculator->calculateFromSubtotal(
                     (int) $pembelian->total_harga,
                     (float) $pembelian->diskon,
@@ -143,24 +139,25 @@ class LaporanService
                     (int) $pembelian->dibayar
                 );
 
+                $net = $this->invoiceNet($pembelian, 'pembelian', $akhir, $totals);
                 return [
                     'tanggal' => tanggal_indonesia($pembelian->created_at, false),
                     'nomor' => tambah_nol_didepan($pembelian->id_pembelian, 10),
                     'supplier' => $pembelian->supplier->nama ?? '-',
-                    'total_item' => (int) $pembelian->total_item,
-                    'subtotal' => (int) $pembelian->total_harga,
+                    'total_item' => $net['quantity'],
+                    'subtotal' => $net['subtotal'],
                     'diskon_persen' => (float) $pembelian->diskon,
-                    'diskon_nominal' => $totals['diskon_nominal'],
-                    'dpp' => $totals['dpp'],
+                    'diskon_nominal' => $net['discount'],
+                    'dpp' => $net['dpp'],
                     'ppn_persen' => (float) ($pembelian->ppn_persen ?? 0),
-                    'ppn_nominal' => $totals['ppn_nominal'],
-                    'grand_total' => (int) $pembelian->bayar,
-                    'dibayar' => (int) $pembelian->dibayar,
-                    'sisa' => (int) $pembelian->sisa,
+                    'ppn_nominal' => $net['tax'],
+                    'grand_total' => $net['total'],
+                    'dibayar' => $net['paid'],
+                    'sisa' => $net['remaining'],
                     'skema' => label_skema_pembayaran($pembelian->skema_pembayaran),
                     'metode' => label_metode_pembayaran($pembelian->metode_pembayaran),
-                    'status_kode' => $pembelian->status_pembayaran,
-                    'status' => label_status_pembayaran($pembelian->status_pembayaran),
+                    'status_kode' => $net['status'],
+                    'status' => label_status_pembayaran($net['status']),
                     'jatuh_tempo' => $pembelian->jatuh_tempo ? tanggal_indonesia($pembelian->jatuh_tempo, false) : '-',
                 ];
             })
@@ -226,10 +223,6 @@ class LaporanService
             ->get()
             ->keyBy('id_penjualan');
 
-        if ($headers->isEmpty()) {
-            return [];
-        }
-
         $details = PenjualanDetail::with('produk.kategori')
             ->whereIn('id_penjualan', $headers->keys())
             ->get()
@@ -274,7 +267,7 @@ class LaporanService
             }
         }
 
-        return $aggregates;
+        return $this->subtractReturns($aggregates, 'penjualan', $awal, $akhir, $idCabang);
     }
 
     protected function aggregateProdukPembelian(string $awal, string $akhir, int $idCabang): array
@@ -284,10 +277,6 @@ class LaporanService
             ->whereBetween('created_at', [$awal . ' 00:00:00', $akhir . ' 23:59:59'])
             ->get()
             ->keyBy('id_pembelian');
-
-        if ($headers->isEmpty()) {
-            return [];
-        }
 
         $details = PembelianDetail::with('produk.kategori')
             ->whereIn('id_pembelian', $headers->keys())
@@ -333,6 +322,40 @@ class LaporanService
             }
         }
 
+        return $this->subtractReturns($aggregates, 'pembelian', $awal, $akhir, $idCabang);
+    }
+
+    private function invoiceNet($header, string $type, string $end, array $totals): array
+    {
+        $id = $header->{'id_' . $type};
+        $returns = DB::table('stock_returns')->where('type', $type)->where('transaction_id', $id)->where('date', '<=', $end)->get();
+        $details = DB::table($type . '_detail')->where('id_' . $type, $id)->get()->keyBy('id_' . $type . '_detail');
+        $returnedSubtotal = 0;
+        foreach ($returns->groupBy('detail_id') as $detailId => $rows) {
+            $detail = $details[$detailId];
+            $returnedSubtotal += (int) round($detail->subtotal * $rows->sum('quantity') / $detail->jumlah);
+        }
+        $subtotal = (int) $header->total_harga - $returnedSubtotal;
+        $dpp = (int) $totals['dpp'] - (int) ($returns->sum('amount') - $returns->sum('tax'));
+        $tax = (int) $totals['ppn_nominal'] - (int) $returns->sum('tax');
+        $total = (int) $header->bayar - (int) $returns->sum('amount');
+        $paid = (int) DB::table($type . '_pembayaran')->where('id_' . $type, $id)->where('created_at', '<=', $end . ' 23:59:59')->sum('nominal') - (int) $returns->sum('refund');
+        return ['quantity' => (int) $header->total_item - (int) $returns->sum('quantity'), 'subtotal' => $subtotal, 'discount' => $subtotal - $dpp, 'dpp' => $dpp, 'tax' => $tax, 'total' => $total, 'paid' => $paid, 'remaining' => max($total - $paid, 0), 'status' => status_pembayaran($total, $paid)];
+    }
+
+    private function subtractReturns(array $aggregates, string $type, string $start, string $end, int $branch): array
+    {
+        $returns = DB::table('stock_returns as r')->join('produk as p', 'p.id_produk', '=', 'r.id_produk')->leftJoin('kategori as k', 'k.id_kategori', '=', 'p.id_kategori')->where('r.id_cabang', $branch)->where('r.type', $type)->whereBetween('r.date', [$start, $end])->select('r.*', 'p.kode_produk', 'p.nama_produk', 'p.stok', 'k.nama_kategori')->get();
+        foreach ($returns as $return) {
+            $key = $return->id_produk;
+            $row = $aggregates[$key] ?? $this->emptyProdukRow($return->kode_produk, $return->nama_produk, $return->nama_kategori ?? 'Tanpa Kategori');
+            $row[$type === 'penjualan' ? 'qty_jual' : 'qty_beli'] -= (int) $return->quantity;
+            $row[$type . '_dpp'] -= (int) $return->amount - (int) $return->tax;
+            $row[$type . '_ppn'] -= (int) $return->tax;
+            $row[$type . '_total'] -= (int) $return->amount;
+            $row['stok_saat_ini'] = (int) $return->stok;
+            $aggregates[$key] = $row;
+        }
         return $aggregates;
     }
 

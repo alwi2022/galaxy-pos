@@ -131,6 +131,7 @@ function editForm(url) {
         $('#modal-form [name=kerusakan]').val(res.kerusakan);
         $('#modal-form [name=biaya_servis]').val(res.biaya_servis);
         $('#modal-form [name=status]').val(res.status);
+        $('#modal-form [name=jatuh_tempo]').val(res.jatuh_tempo);
     });
 }
 

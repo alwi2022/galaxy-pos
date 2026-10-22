@@ -54,7 +54,7 @@
                 <th>Pendapatan Lain</th>
                 <th>Servis</th>
                 <th>Biaya</th>
-                <th>Pendapatan Bersih</th>
+                <th>Selisih Kas Transaksi</th>
             </tr>
         </thead>
         <tbody>

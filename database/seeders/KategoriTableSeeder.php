@@ -20,7 +20,7 @@ class KategoriTableSeeder extends Seeder
         foreach ($kategori as $nama) {
             DB::table('kategori')->insert([
                 'nama_kategori' => $nama,
-                'id_cabang' => 1,
+                'id_cabang' => DB::table('cabang')->min('id_cabang'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

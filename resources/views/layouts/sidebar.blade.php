@@ -1,106 +1,99 @@
+@php
+    $level = (int)auth()->user()->level;
+    $module = request()->route('module');
+    $groups = [
+        ['title'=>'Master','icon'=>'folder','levels'=>[1],'items'=>[
+            ['title'=>'Kategori','icon'=>'cube','route'=>'kategori.index','active'=>request()->routeIs('kategori.*')],
+            ['title'=>'Produk','icon'=>'cubes','route'=>'produk.index','active'=>request()->routeIs('produk.*')],
+            ['title'=>'Member','icon'=>'id-card','route'=>'member.index','active'=>request()->routeIs('member.*')],
+            ['title'=>'Supplier','icon'=>'truck','route'=>'supplier.index','active'=>request()->routeIs('supplier.*')],
+        ]],
+        ['title'=>'Transaksi','icon'=>'shopping-cart','levels'=>[1,2],'items'=>[
+            ['title'=>'Transaksi Aktif','icon'=>'cart-arrow-down','route'=>'transaksi.index','active'=>request()->routeIs('transaksi.index','transaksi_detail.*')],
+            ['title'=>'Transaksi Baru','icon'=>'plus-square','route'=>'transaksi.baru','active'=>request()->routeIs('transaksi.baru')],
+            ['title'=>'Penjualan','icon'=>'upload','route'=>'penjualan.index','levels'=>[1],'active'=>request()->routeIs('penjualan.*')],
+            ['title'=>'Pembelian','icon'=>'download','route'=>'pembelian.index','levels'=>[1],'active'=>request()->routeIs('pembelian.*','pembelian_detail.*')],
+        ]],
+        ['title'=>'Persediaan','icon'=>'cubes','levels'=>[1],'items'=>[
+            ['title'=>'Kartu Stok & Opname','icon'=>'list-alt','module'=>'stok'],
+            ['title'=>'Retur Barang','icon'=>'exchange','module'=>'retur'],
+        ]],
+        ['title'=>'Servis','icon'=>'wrench','levels'=>[1,3],'items'=>[
+            ['title'=>'Servis Komputer','icon'=>'desktop','route'=>'servis.index','active'=>request()->routeIs('servis.*')],
+            ['title'=>'Pembayaran Servis','icon'=>'credit-card','module'=>'piutang-servis','levels'=>[1]],
+        ]],
+        ['title'=>'Keuangan','icon'=>'money','levels'=>[1,2],'items'=>[
+            ['title'=>'Utang & Piutang','icon'=>'credit-card','route'=>'pembayaran.index','active'=>request()->routeIs('pembayaran.*')],
+            ['title'=>'Kas, Bank & Modal','icon'=>'bank','module'=>'kas','levels'=>[1]],
+            ['title'=>'Pinjaman & Cicilan','icon'=>'handshake-o','module'=>'pinjaman','levels'=>[1]],
+            ['title'=>'Pendapatan Lain','icon'=>'line-chart','route'=>'pendapatan-lain.index','levels'=>[1],'active'=>request()->routeIs('pendapatan-lain.*')],
+            ['title'=>'Biaya Operasional','icon'=>'money','route'=>'pengeluaran.index','levels'=>[1],'active'=>request()->routeIs('pengeluaran.*')],
+        ]],
+        ['title'=>'Akuntansi','icon'=>'book','levels'=>[1],'items'=>[
+            ['title'=>'Inventaris & Penyusutan','icon'=>'desktop','module'=>'aset'],
+            ['title'=>'Pembayaran di Muka','icon'=>'calendar','module'=>'akrual'],
+            ['title'=>'Rekonsiliasi Bank','icon'=>'balance-scale','module'=>'rekonsiliasi'],
+            ['title'=>'Pajak & PPN','icon'=>'file-text-o','module'=>'pajak'],
+            ['title'=>'Buku Besar & Tutup Buku','icon'=>'book','module'=>'akuntansi'],
+        ]],
+        ['title'=>'Laporan','icon'=>'file-text','levels'=>[1],'items'=>[
+            ['title'=>'Ringkasan Kas','icon'=>'money','tab'=>'ringkasan'],
+            ['title'=>'Laporan Penjualan','icon'=>'upload','tab'=>'penjualan'],
+            ['title'=>'Laporan Pembelian','icon'=>'download','tab'=>'pembelian'],
+            ['title'=>'Laporan per Barang','icon'=>'cube','tab'=>'produk'],
+            ['title'=>'Laporan per Kategori','icon'=>'folder','tab'=>'kategori'],
+            ['title'=>'Laba Rugi','icon'=>'line-chart','report'=>'profit'],
+            ['title'=>'Neraca','icon'=>'balance-scale','report'=>'balance'],
+            ['title'=>'Arus Kas','icon'=>'exchange','report'=>'cash'],
+            ['title'=>'Laporan PPN','icon'=>'file-text-o','report'=>'tax'],
+        ]],
+        ['title'=>'System','icon'=>'cogs','levels'=>[1],'items'=>[
+            ['title'=>'User','icon'=>'users','route'=>'user.index','active'=>request()->routeIs('user.index','user.create','user.edit','user.show')],
+            ['title'=>'Pengaturan','icon'=>'wrench','route'=>'setting.index','active'=>request()->routeIs('setting.*')],
+        ]],
+        ['title'=>'Cabang','icon'=>'building','levels'=>[1],'items'=>[
+            ['title'=>'Pindah Cabang','icon'=>'exchange','route'=>'user.pindah_cabang','active'=>request()->routeIs('user.pindah_cabang','user.update_cabang')],
+            ['title'=>'Data Cabang','icon'=>'sitemap','route'=>'cabang.index','active'=>request()->routeIs('cabang.*')],
+        ]],
+    ];
+@endphp
 <aside class="main-sidebar">
     <section class="sidebar">
-        @php
-            $masterOpen = request()->routeIs('kategori.*', 'produk.*', 'member.*', 'supplier.*');
-            $transaksiOpen = request()->routeIs('transaksi.*', 'pengeluaran.*', 'pendapatan-lain.*', 'pembelian.*', 'penjualan.*', 'pembayaran.*');
-            $servisOpen = request()->routeIs('servis.*');
-            $systemOpen = request()->routeIs('user.*', 'setting.*');
-            $cabangOpen = request()->routeIs('cabang.*', 'user.pindah_cabang', 'user.update_cabang');
-        @endphp
-
         <div class="user-panel">
-            <div class="pull-left image">
-                <img src="{{ url(auth()->user()->foto ?? '') }}" class="img-circle img-profil" alt="User Image">
-            </div>
-            <div class="pull-left info">
-                <p>{{ auth()->user()->name }}</p>
-                <small>{{ auth()->user()->cabang->nama_cabang ?? 'Tanpa Cabang' }}</small>
-                <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
-            </div>
+            <div class="pull-left image"><img src="{{ url(auth()->user()->foto ?? '') }}" class="img-circle img-profil" alt="User Image"></div>
+            <div class="pull-left info"><p>{{ auth()->user()->name }}</p><small>{{ auth()->user()->cabang->nama_cabang ?? 'Tanpa Cabang' }}</small><a href="#"><i class="fa fa-circle text-success"></i> Online</a></div>
         </div>
-
         <ul class="sidebar-menu" data-widget="tree" style="transition: none;">
-            <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <a href="{{ route('dashboard') }}">
-                    <i class="fa fa-dashboard"></i> <span>Dashboard</span>
-                </a>
-            </li>
-
-            {{-- MASTER --}}
-            @if (auth()->user()->level == 1)
-            <li class="treeview {{ $masterOpen ? 'active menu-open' : '' }}">
-                <a href="#"><i class="fa fa-folder"></i> <span>Master</span>
-                    <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                </a>
-                <ul class="treeview-menu">
-                    <li class="{{ request()->routeIs('kategori.*') ? 'active' : '' }}"><a href="{{ route('kategori.index') }}"><i class="fa fa-cube"></i> Kategori</a></li>
-                    <li class="{{ request()->routeIs('produk.*') ? 'active' : '' }}"><a href="{{ route('produk.index') }}"><i class="fa fa-cubes"></i> Produk</a></li>
-                    <li class="{{ request()->routeIs('member.*') ? 'active' : '' }}"><a href="{{ route('member.index') }}"><i class="fa fa-id-card"></i> Member</a></li>
-                    <li class="{{ request()->routeIs('supplier.*') ? 'active' : '' }}"><a href="{{ route('supplier.index') }}"><i class="fa fa-truck"></i> Supplier</a></li>
-                </ul>
-            </li>
-            @endif
-
-            {{-- TRANSAKSI --}}
-            @if (in_array(auth()->user()->level,[1,2]))
-            <li class="treeview {{ $transaksiOpen ? 'active menu-open' : '' }}">
-                <a href="#"><i class="fa fa-shopping-cart"></i> <span>Transaksi</span>
-                    <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                </a>
-                <ul class="treeview-menu">
-                <li class="{{ request()->routeIs('transaksi.index') ? 'active' : '' }}"><a href="{{ route('transaksi.index') }}"><i class="fa fa-cart-arrow-down"></i> Transaksi Aktif</a></li>
-                <li class="{{ request()->routeIs('transaksi.baru') ? 'active' : '' }}"><a href="{{ route('transaksi.baru') }}"><i class="fa fa-plus-square"></i> Transaksi Baru</a></li>
-                <li class="{{ request()->routeIs('pembayaran.*') ? 'active' : '' }}"><a href="{{ route('pembayaran.index') }}"><i class="fa fa-credit-card"></i> Pembayaran</a></li>
-                @if (auth()->user()->level == 1)
-                    <li class="{{ request()->routeIs('pendapatan-lain.*') ? 'active' : '' }}"><a href="{{ route('pendapatan-lain.index') }}"><i class="fa fa-line-chart"></i> Pendapatan Lain</a></li>
-                    <li class="{{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}"><a href="{{ route('pengeluaran.index') }}"><i class="fa fa-money"></i> Biaya Operasional</a></li>
-                    <li class="{{ request()->routeIs('pembelian.*', 'pembelian_detail.*') ? 'active' : '' }}"><a href="{{ route('pembelian.index') }}"><i class="fa fa-download"></i> Pembelian</a></li>
-                    <li class="{{ request()->routeIs('penjualan.*') ? 'active' : '' }}"><a href="{{ route('penjualan.index') }}"><i class="fa fa-upload"></i> Penjualan</a></li>
-                    @endif
-                </ul>
-            </li>
-            @endif
-
-            
-
-            {{-- SERVIS --}}
-            @if (in_array(auth()->user()->level, [1, 3]))
-            <li class="treeview {{ $servisOpen ? 'active menu-open' : '' }}">
-                <a href="#"><i class="fa fa-wrench"></i> <span>Servis</span>
-                    <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                </a>
-                <ul class="treeview-menu">
-                    <li class="{{ request()->routeIs('servis.*') ? 'active' : '' }}"><a href="{{ route('servis.index') }}"><i class="fa fa-desktop"></i> Servis Komputer</a></li>
-                </ul>
-            </li>
-            @endif
-
-            {{-- LAPORAN --}}
-            @if (auth()->user()->level == 1)
-            <li class="{{ request()->routeIs('laporan.*') ? 'active' : '' }}"><a href="{{ route('laporan.index') }}"><i class="fa fa-file-text"></i> <span>Laporan</span></a></li>
-
-            {{-- SYSTEM --}}
-            <li class="treeview {{ $systemOpen ? 'active menu-open' : '' }}">
-                <a href="#"><i class="fa fa-cogs"></i> <span>System</span>
-                    <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                </a>
-                <ul class="treeview-menu">
-                    <li class="{{ request()->routeIs('user.index', 'user.create', 'user.edit', 'user.show') ? 'active' : '' }}"><a href="{{ route('user.index') }}"><i class="fa fa-users"></i> User</a></li>
-                    <li class="{{ request()->routeIs('setting.*') ? 'active' : '' }}"><a href="{{ route('setting.index') }}"><i class="fa fa-wrench"></i> Pengaturan</a></li>
-                </ul>
-            </li>
-
-            {{-- CABANG --}}
-            <li class="treeview {{ $cabangOpen ? 'active menu-open' : '' }}">
-                <a href="#"><i class="fa fa-building"></i> <span>Cabang</span>
-                    <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                </a>
-                <ul class="treeview-menu">
-                    <li class="{{ request()->routeIs('user.pindah_cabang', 'user.update_cabang') ? 'active' : '' }}"><a href="{{ route('user.pindah_cabang') }}"><i class="fa fa-exchange"></i> Pindah Cabang</a></li>
-                    <li class="{{ request()->routeIs('cabang.*') ? 'active' : '' }}"><a href="{{ route('cabang.index') }}"><i class="fa fa-sitemap"></i> Data Cabang</a></li>
-                </ul>
-            </li>
-            @endif
+            <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><a href="{{ route('dashboard') }}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
+            @foreach($groups as $group)
+                @continue(!in_array($level,$group['levels'],true))
+                @php
+                    $items = collect($group['items'])->filter(fn($item)=>in_array($level,$item['levels']??$group['levels'],true))->map(function($item) use($module) {
+                        if(isset($item['module'])) {
+                            $item['url'] = route('business.index',$item['module']);
+                            $item['active'] = request()->routeIs('business.index') && $module === $item['module'];
+                        } elseif(isset($item['tab'])) {
+                            $item['url'] = route('laporan.index',['tab'=>$item['tab']]);
+                            $item['active'] = request()->routeIs('laporan.index') && request('tab','ringkasan') === $item['tab'];
+                        } elseif(isset($item['report'])) {
+                            $item['url'] = route('laporan.keuangan',$item['report']);
+                            $item['active'] = request()->routeIs('laporan.keuangan') && request()->route('report') === $item['report'];
+                        } else {
+                            $item['url'] = route($item['route']);
+                        }
+                        return $item;
+                    });
+                    $open = $items->contains('active',true);
+                @endphp
+                <li class="treeview {{ $open ? 'active menu-open' : '' }}">
+                    <a href="#"><i class="fa fa-{{ $group['icon'] }}"></i> <span>{{ $group['title'] }}</span><span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+                    <ul class="treeview-menu">
+                        @foreach($items as $item)
+                        <li class="{{ $item['active'] ? 'active' : '' }}"><a href="{{ $item['url'] }}" @isset($item['tab']) data-report-tab="{{ $item['tab'] }}" @endisset><i class="fa fa-{{ $item['icon'] }}"></i> {{ $item['title'] }}</a></li>
+                        @endforeach
+                    </ul>
+                </li>
+            @endforeach
         </ul>
     </section>
 </aside>

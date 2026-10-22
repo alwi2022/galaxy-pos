@@ -46,7 +46,15 @@ Route::get('/test-barcode', function() {
         return 'Error: ' . $e->getMessage();
     }
 });
-Route::group(['middleware' => 'auth'], function () {
+Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite::class]], function () {
+    Route::group(['middleware' => 'level:1'], function () {
+        Route::get('/usaha/export/jurnal', [\App\Http\Controllers\BusinessController::class, 'export'])->name('business.export');
+        Route::get('/usaha/export/pajak/{id}/{format}', [\App\Http\Controllers\BusinessController::class, 'taxExport'])->name('business.tax-export');
+        Route::get('/usaha/template/bank', [\App\Http\Controllers\BusinessController::class, 'bankTemplate'])->name('business.bank-template');
+        Route::get('/usaha/detail/{type}/{id}', [\App\Http\Controllers\BusinessController::class, 'details'])->name('business.details');
+        Route::post('/usaha/simpan/{action}', [\App\Http\Controllers\BusinessController::class, 'store'])->name('business.store');
+        Route::get('/usaha/{module?}', [\App\Http\Controllers\BusinessController::class, 'index'])->name('business.index');
+    });
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::group(['middleware' => 'level:1'], function () {
@@ -122,6 +130,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::group(['middleware' => 'level:1'], function () {
         Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/laporan/keuangan/{report}', [\App\Http\Controllers\BusinessController::class, 'financialReport'])->name('laporan.keuangan');
         Route::get('/laporan/data/{awal}/{akhir}', [LaporanController::class, 'data'])->name('laporan.data');
         Route::get('/laporan/pdf/{awal}/{akhir}', [LaporanController::class, 'exportPDF'])->name('laporan.export_pdf');
         Route::get('/laporan/excel/{tab}/{awal}/{akhir}', [LaporanController::class, 'exportExcel'])->name('laporan.export_excel');

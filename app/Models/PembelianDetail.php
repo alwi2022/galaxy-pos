@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PembelianDetail extends Model
 {
+    use \App\Models\Concerns\GuardsDraftDetail;
     use HasFactory;
 
     protected $table = 'pembelian_detail';

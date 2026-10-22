@@ -45,10 +45,10 @@ class PembayaranController extends Controller
                 return 'Umum';
             })
             ->addColumn('tagihan', function ($penjualan) {
-                return 'Rp. ' . format_uang($penjualan->bayar);
+                return 'Rp. ' . format_uang($penjualan->bayar - $penjualan->returned_total);
             })
             ->addColumn('dibayar', function ($penjualan) {
-                return 'Rp. ' . format_uang($penjualan->dibayar);
+                return 'Rp. ' . format_uang($penjualan->dibayar - $penjualan->refunded_total);
             })
             ->addColumn('sisa', function ($penjualan) {
                 return 'Rp. ' . format_uang($penjualan->sisa);
@@ -88,10 +88,10 @@ class PembayaranController extends Controller
                 return $pembelian->supplier->nama ?? '-';
             })
             ->addColumn('tagihan', function ($pembelian) {
-                return 'Rp. ' . format_uang($pembelian->bayar);
+                return 'Rp. ' . format_uang($pembelian->bayar - $pembelian->returned_total);
             })
             ->addColumn('dibayar', function ($pembelian) {
-                return 'Rp. ' . format_uang($pembelian->dibayar);
+                return 'Rp. ' . format_uang($pembelian->dibayar - $pembelian->refunded_total);
             })
             ->addColumn('sisa', function ($pembelian) {
                 return 'Rp. ' . format_uang($pembelian->sisa);
@@ -133,8 +133,8 @@ class PembayaranController extends Controller
                 'nomor' => tambah_nol_didepan($penjualan->id_penjualan, 10),
                 'pihak' => $penjualan->member->nama ?? 'Umum',
                 'tanggal' => tanggal_indonesia($penjualan->created_at, false),
-                'tagihan' => format_uang($penjualan->bayar),
-                'dibayar' => format_uang($penjualan->dibayar),
+                'tagihan' => format_uang($penjualan->bayar - $penjualan->returned_total),
+                'dibayar' => format_uang($penjualan->dibayar - $penjualan->refunded_total),
                 'sisa' => format_uang($penjualan->sisa),
                 'jatuh_tempo' => $penjualan->jatuh_tempo ? tanggal_indonesia($penjualan->jatuh_tempo, false) : '-',
                 'status' => label_status_pembayaran($penjualan->status_pembayaran),
@@ -162,8 +162,8 @@ class PembayaranController extends Controller
                 'nomor' => tambah_nol_didepan($pembelian->id_pembelian, 10),
                 'pihak' => $pembelian->supplier->nama ?? '-',
                 'tanggal' => tanggal_indonesia($pembelian->created_at, false),
-                'tagihan' => format_uang($pembelian->bayar),
-                'dibayar' => format_uang($pembelian->dibayar),
+                'tagihan' => format_uang($pembelian->bayar - $pembelian->returned_total),
+                'dibayar' => format_uang($pembelian->dibayar - $pembelian->refunded_total),
                 'sisa' => format_uang($pembelian->sisa),
                 'jatuh_tempo' => $pembelian->jatuh_tempo ? tanggal_indonesia($pembelian->jatuh_tempo, false) : '-',
                 'status' => label_status_pembayaran($pembelian->status_pembayaran),
@@ -181,7 +181,7 @@ class PembayaranController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $id) {
-            $penjualan = Penjualan::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
+            $penjualan = Penjualan::where('id_cabang', auth()->user()->id_cabang)->lockForUpdate()->findOrFail($id);
             $nominal = (int) $request->nominal;
 
             if ($nominal <= 0 || $nominal > (int) $penjualan->sisa) {
@@ -214,7 +214,7 @@ class PembayaranController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $id) {
-            $pembelian = Pembelian::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
+            $pembelian = Pembelian::where('id_cabang', auth()->user()->id_cabang)->lockForUpdate()->findOrFail($id);
             $nominal = (int) $request->nominal;
 
             if ($nominal <= 0 || $nominal > (int) $pembelian->sisa) {

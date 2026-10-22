@@ -1,0 +1,7 @@
+.galaxy-business .box-body > .nav-tabs-custom { margin-bottom: 0; box-shadow: none; }
+.galaxy-business .box-body > .nav-tabs-custom > .tab-content { padding: 15px 0 0; }
+.galaxy-business .business-inline-form { margin: 0; }
+.galaxy-business .dataTables_wrapper .table { width: 100%; }
+.galaxy-business .filter-group { display: inline-flex; align-items: center; gap: 8px; }
+.galaxy-business .filter-group label { margin-bottom: 0; }
+@media (max-width: 767px) { .galaxy-business .filter-group { display: flex; flex-wrap: wrap; width: 100%; } }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Cabang;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -14,6 +15,8 @@ class UserTableSeeder extends Seeder
      */
     public function run()
     {
+        $cabang = Cabang::query()->orderBy('id_cabang')->value('id_cabang');
+
         $users = array(
             [
                 'name' => 'Administrator',
@@ -21,7 +24,7 @@ class UserTableSeeder extends Seeder
                 'password' => bcrypt('123'),
                 'foto' => '/img/user.jpg',
                 'level' => 1,
-                'id_cabang' => 1,
+                'id_cabang' => $cabang,
             ],
             [
                 'name' => 'Kasir 1',
@@ -29,7 +32,7 @@ class UserTableSeeder extends Seeder
                 'password' => bcrypt('123'),
                 'foto' => '/img/user.jpg',
                 'level' => 2,
-                'id_cabang' => 1,
+                'id_cabang' => $cabang,
             ],
             [
                 'name' => 'Teknisi 1',
@@ -37,7 +40,7 @@ class UserTableSeeder extends Seeder
                 'password' => bcrypt('123'),
                 'foto' => '/img/user.jpg',
                 'level' => 3,
-                'id_cabang' => 1,
+                'id_cabang' => $cabang,
             ],
 
         );

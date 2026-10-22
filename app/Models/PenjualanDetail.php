@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PenjualanDetail extends Model
 {
+    use \App\Models\Concerns\GuardsDraftDetail;
     use HasFactory;
 
     protected $table = 'penjualan_detail';

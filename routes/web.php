@@ -67,6 +67,8 @@ Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite:
         Route::get('/produk/data', [ProdukController::class, 'data'])->name('produk.data');
         Route::post('/produk/delete-selected', [ProdukController::class, 'deleteSelected'])->name('produk.delete_selected');
         Route::post('/produk/cetak-barcode', [ProdukController::class, 'cetakBarcode'])->name('produk.cetak_barcode');
+        Route::get('/produk/import/template', [ProdukController::class, 'importTemplate'])->name('produk.import_template');
+        Route::post('/produk/import', [ProdukController::class, 'import'])->name('produk.import');
         Route::resource('/produk', ProdukController::class)->middleware('cabang');
 
         Route::get('/member/data', [MemberController::class, 'data'])->name('member.data');

@@ -20,8 +20,22 @@
                     <button onclick="addForm('{{ route('produk.store') }}')" class="btn btn-success btn-xs btn-flat"><i class="fa fa-plus-circle"></i> Tambah</button>
                     <button onclick="deleteSelected('{{ route('produk.delete_selected') }}')" class="btn btn-danger btn-xs btn-flat"><i class="fa fa-trash"></i> Hapus</button>
                     <button onclick="cetakBarcode('{{ route('produk.cetak_barcode') }}')" class="btn btn-info btn-xs btn-flat"><i class="fa fa-barcode"></i> Cetak Barcode</button>
+                    <button type="button" data-toggle="modal" data-target="#modal-import" class="btn btn-primary btn-xs btn-flat"><i class="fa fa-upload"></i> Import</button>
                 </div>
             </div>
+            @if (session('import_errors') || $errors->any())
+            <div class="box-body">
+                <div class="alert alert-danger" style="margin-bottom: 0;">
+                    @if (session('import_errors'))
+                    <strong>Import dibatalkan, tidak ada produk yang disimpan.</strong> Perbaiki {{ session('import_error_total') }} baris berikut lalu unggah ulang:
+                    <ul>@foreach (session('import_errors') as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    @if (session('import_error_total') > count(session('import_errors')))<small>Menampilkan {{ count(session('import_errors')) }} dari {{ session('import_error_total') }} error.</small>@endif
+                    @else
+                    <ul style="margin-bottom: 0;">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    @endif
+                </div>
+            </div>
+            @endif
             <div class="box-body table-responsive">
                 <form action="" method="post" class="form-produk">
                     @csrf
@@ -49,6 +63,7 @@
 </div>
 
 @includeIf('produk.form')
+@includeIf('produk.import')
 @endsection
 
 @push('scripts')

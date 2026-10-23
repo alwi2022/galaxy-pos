@@ -88,25 +88,135 @@ class ProdukController extends Controller
         $request->validate(['nama_produk' => 'required|string|max:255|unique:produk,nama_produk', 'id_kategori' => 'required|integer', 'harga_beli' => 'required|integer|min:0|max:2000000000', 'harga_jual' => 'required|integer|min:0|max:2000000000', 'stok' => 'required|integer|min:0|max:1000000', 'diskon' => 'nullable|integer|min:0|max:100']);
         abort_unless(Kategori::where('id_cabang', auth()->user()->id_cabang)->where('id_kategori', $request->id_kategori)->exists(), 422);
         \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
-        $initialStock = (int) $request->stok;
+            $this->createProduct($request->only(['nama_produk', 'id_kategori', 'merk', 'harga_beli', 'harga_jual', 'diskon', 'stok']));
+        });
+
+        return back()->with('success', 'Data berhasil disimpan');
+    }
+
+    private function createProduct(array $data, bool $postJournal = true): Produk
+    {
+        $initialStock = (int) ($data['stok'] ?? 0);
         $next = (int) Produk::max('id_produk') + 1;
         while (Produk::where('kode_produk', 'P' . tambah_nol_didepan($next, 6))->exists()) {
             $next++;
         }
-        $request['kode_produk'] = 'P' . tambah_nol_didepan($next, 6);
-        $request['id_cabang'] = auth()->user()->id_cabang;
-        $produk = Produk::create($request->only(['nama_produk', 'id_kategori', 'merk', 'harga_beli', 'harga_jual', 'diskon', 'kode_produk', 'id_cabang']) + ['stok' => 0]);
+        $produk = Produk::create([
+            'nama_produk' => $data['nama_produk'],
+            'id_kategori' => $data['id_kategori'],
+            'merk' => $data['merk'] ?? null,
+            'harga_beli' => $data['harga_beli'],
+            'harga_jual' => $data['harga_jual'],
+            'diskon' => $data['diskon'] ?? 0,
+            'kode_produk' => 'P' . tambah_nol_didepan($next, 6),
+            'id_cabang' => auth()->user()->id_cabang,
+            'stok' => 0,
+        ]);
         if ($initialStock > 0) {
             $ref = 'OPEN-PRODUCT-' . $produk->id_produk;
             app(\App\Services\StockLedgerService::class)->move(auth()->user()->id_cabang, $produk->id_produk, $initialStock, $ref, 'Stok awal produk', now()->toDateTimeString(), (int) $produk->harga_beli);
             $value = $initialStock * $produk->harga_beli;
-            if ($value > 0) {
+            if ($postJournal && $value > 0) {
                 app(\App\Services\LedgerService::class)->post(auth()->user()->id_cabang, now()->toDateString(), $ref, 'Stok awal ' . $produk->nama_produk, [['1301', $value, 0], ['3101', 0, $value]]);
             }
         }
+
+        return $produk;
+    }
+
+    public function importTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ReportExport(
+            ['nama_produk', 'kategori', 'merk', 'harga_beli', 'harga_jual', 'diskon', 'stok'],
+            [
+                ['Mouse Wireless M185', 'Aksesoris', 'Logitech', 95000, 125000, 0, 10],
+                ['Flashdisk 32GB', 'Penyimpanan', 'Sandisk', 55000, 75000, 5, 0],
+            ]
+        ), 'template-import-produk.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv,txt|max:5120']);
+        $reader = new \App\Imports\ProdukImport();
+        \Maatwebsite\Excel\Facades\Excel::import($reader, $request->file('file'));
+
+        $branch = auth()->user()->id_cabang;
+        $integer = fn ($value) => is_int($value) || (is_float($value) && floor($value) === $value) || (is_string($value) && preg_match('/^\d+$/', trim($value)));
+        $categories = Kategori::where('id_cabang', $branch)->get()->keyBy(fn ($k) => mb_strtolower(trim($k->nama_kategori)));
+        $existingNames = Produk::pluck('nama_produk')->map(fn ($n) => mb_strtolower(trim($n)))->flip();
+        $rows = [];
+        $errors = [];
+        $seen = [];
+
+        foreach ($reader->rows ?? [] as $index => $row) {
+            $line = $index + 2;
+            $nama = trim((string) ($row['nama_produk'] ?? ''));
+            $kategori = trim((string) ($row['kategori'] ?? ''));
+            if ($nama === '' && $kategori === '' && blank($row['harga_beli'] ?? null) && blank($row['harga_jual'] ?? null)) {
+                continue;
+            }
+            $rowErrors = [];
+            $key = mb_strtolower($nama);
+            if ($nama === '' || mb_strlen($nama) > 255) {
+                $rowErrors[] = 'nama_produk wajib diisi (maks. 255 karakter)';
+            } elseif (isset($existingNames[$key])) {
+                $rowErrors[] = 'nama_produk "' . $nama . '" sudah ada';
+            } elseif (isset($seen[$key])) {
+                $rowErrors[] = 'nama_produk "' . $nama . '" ganda dengan baris ' . $seen[$key];
+            }
+            if ($kategori === '' || mb_strlen($kategori) > 100) {
+                $rowErrors[] = 'kategori wajib diisi (maks. 100 karakter)';
+            }
+            $numbers = [];
+            foreach (['harga_beli' => [true, 2000000000], 'harga_jual' => [true, 2000000000], 'diskon' => [false, 100], 'stok' => [false, 1000000]] as $field => [$required, $max]) {
+                $value = $row[$field] ?? null;
+                if (blank($value)) {
+                    if ($required) {
+                        $rowErrors[] = $field . ' wajib diisi';
+                    }
+                    $numbers[$field] = 0;
+                } elseif (! $integer($value) || (int) $value > $max) {
+                    $rowErrors[] = $field . ' harus angka bulat 0 sampai ' . number_format($max, 0, ',', '.') . ' tanpa titik/koma';
+                } else {
+                    $numbers[$field] = (int) $value;
+                }
+            }
+            if ($rowErrors) {
+                $errors[] = 'Baris ' . $line . ': ' . implode('; ', $rowErrors) . '.';
+                continue;
+            }
+            $seen[$key] = $line;
+            $rows[] = ['nama_produk' => $nama, 'kategori' => $kategori, 'merk' => trim((string) ($row['merk'] ?? '')) ?: null] + $numbers;
+        }
+
+        if (! $rows && ! $errors) {
+            $errors[] = 'File tidak berisi data produk. Gunakan template dan isi mulai baris kedua.';
+        }
+        if (count($rows) + count($errors) > 1000) {
+            $errors = ['Maksimal 1.000 produk per file.'];
+        }
+        if ($errors) {
+            return back()->with('import_errors', array_slice($errors, 0, 50))->with('import_error_total', count($errors));
+        }
+
+        $newCategories = 0;
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $branch, &$categories, &$newCategories) {
+            foreach ($rows as $row) {
+                $key = mb_strtolower($row['kategori']);
+                if (! isset($categories[$key])) {
+                    $categories[$key] = Kategori::create(['nama_kategori' => $row['kategori'], 'id_cabang' => $branch]);
+                    $newCategories++;
+                }
+                $this->createProduct(['id_kategori' => $categories[$key]->id_kategori] + $row, false);
+            }
+            $value = array_sum(array_map(fn ($row) => $row['stok'] * $row['harga_beli'], $rows));
+            if ($value > 0) {
+                app(\App\Services\LedgerService::class)->post($branch, now()->toDateString(), 'OPEN-IMPORT-' . \Illuminate\Support\Str::uuid(), 'Stok awal import ' . count($rows) . ' produk', [['1301', $value, 0], ['3101', 0, $value]]);
+            }
         });
 
-        return back()->with('success', 'Data berhasil disimpan');
+        return back()->with('success', count($rows) . ' produk berhasil diimpor' . ($newCategories ? ', ' . $newCategories . ' kategori baru dibuat' : '') . '.');
     }
 
     /**

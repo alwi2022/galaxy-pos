@@ -147,6 +147,10 @@ Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite:
 
     Route::group(['middleware' => ['level:1,3']], function () {
         Route::get('/servis/data', [ServisController::class, 'data'])->name('servis.data');
+        Route::get('/servis-produk/data', [ServisController::class, 'produkData'])->name('servis.produk.data');
+        Route::get('/servis/{id}/sparepart/data', [ServisController::class, 'sparepartData'])->name('servis.sparepart.data')->middleware('cabang');
+        Route::post('/servis/{id}/sparepart', [ServisController::class, 'sparepartStore'])->name('servis.sparepart.store')->middleware('cabang');
+        Route::delete('/servis/{id}/sparepart/{sparepart}', [ServisController::class, 'sparepartDestroy'])->name('servis.sparepart.destroy')->middleware('cabang');
         Route::resource('/servis', ServisController::class)->except('show')->middleware('cabang');
         Route::get('/servis/nota-kecil/{id}', [ServisController::class, 'notaKecil'])->name('servis.nota_kecil')->middleware('cabang');
     });

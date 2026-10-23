@@ -48,7 +48,8 @@ class ServicePaymentService
     private function sync(int $id): void
     {
         $service = DB::table('servis')->where('id_servis', $id)->first();
+        $tagihan = (int) $service->biaya_servis + (int) ($service->sparepart_total ?? 0);
         $paid = (int) DB::table('servis_pembayaran')->where('id_servis', $id)->whereNull('cancelled_at')->sum('nominal');
-        DB::table('servis')->where('id_servis', $id)->update(['dibayar' => $paid, 'sisa' => max($service->biaya_servis - $paid, 0), 'status_pembayaran' => status_pembayaran($service->biaya_servis, $paid), 'updated_at' => now()]);
+        DB::table('servis')->where('id_servis', $id)->update(['dibayar' => $paid, 'sisa' => max($tagihan - $paid, 0), 'status_pembayaran' => status_pembayaran($tagihan, $paid), 'updated_at' => now()]);
     }
 }

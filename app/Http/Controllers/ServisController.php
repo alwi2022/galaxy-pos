@@ -30,16 +30,17 @@ class ServisController extends Controller
             ->addIndexColumn()
             ->addColumn('kode_servis', fn($s) => '<span class="label label-success">' . $s->kode_servis . '</span>')
             ->addColumn('status', fn($s) => '<span class="label label-info">' . $s->status . '</span>')
-            ->addColumn('biaya', fn($s) => format_uang($s->biaya_servis))
+            ->addColumn('biaya', fn($s) => format_uang((int) $s->biaya_servis + (int) $s->sparepart_total))
             ->addColumn('dibayar', fn($s) => format_uang($s->dibayar))
             ->addColumn('sisa', fn($s) => format_uang($s->sisa))
             ->addColumn('pembayaran', fn($s) => '<span class="label '.class_status_pembayaran($s->status_pembayaran).'">'.label_status_pembayaran($s->status_pembayaran).'</span>')
             ->addColumn('aksi', function ($s) {
                 $btnCetak = '<a href="' . route('servis.nota_kecil', $s->id_servis) . '" target="_blank" class="btn btn-xs btn-info btn-flat"><i class="fa fa-print"></i></a>';
+                $btnSparepart = '<button onclick="kelolaSparepart(' . $s->id_servis . ',`' . $s->kode_servis . '`,`' . $s->status . '`,' . (int) $s->biaya_servis . ')" class="btn btn-xs btn-warning btn-flat" title="Sparepart"><i class="fa fa-wrench"></i></button>';
                 $btnEdit = '<button onclick="editForm(`' . route('servis.edit', $s->id_servis) . '`)" class="btn btn-xs btn-primary btn-flat"><i class="fa fa-edit"></i></button>';
                 $btnHapus = '<button onclick="deleteData(`' . route('servis.destroy', $s->id_servis) . '`)" class="btn btn-xs btn-danger btn-flat"><i class="fa fa-trash"></i></button>';
                 $btnBayar = auth()->user()->level == 1 && $s->ledger_entry_id ? '<a class="btn btn-xs btn-success" title="Pembayaran servis" href="'.route('business.index',['module'=>'piutang-servis','q'=>$s->kode_servis,'start'=>date('Y-m-01',strtotime($s->tanggal_selesai))]).'"><i class="fa fa-credit-card"></i></a>' : '';
-                return '<div class="btn-group">'.$btnCetak . ' ' . $btnEdit . ' ' . $btnBayar . ' ' . $btnHapus.'</div>';
+                return '<div class="btn-group">'.$btnCetak . ' ' . $btnSparepart . ' ' . $btnEdit . ' ' . $btnBayar . ' ' . $btnHapus.'</div>';
             })
             ->rawColumns(['kode_servis', 'status', 'pembayaran', 'aksi'])
             ->make(true);
@@ -113,7 +114,9 @@ class ServisController extends Controller
 
     public function notaKecil($id)
     {
-        $servis = Servis::with('cabang')->where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
+        $servis = Servis::with('cabang', 'member', 'spareparts.produk')
+            ->where('id_cabang', auth()->user()->id_cabang)
+            ->findOrFail($id);
 
         return view('servis.nota', compact('servis'));
     }
@@ -122,6 +125,91 @@ class ServisController extends Controller
     {
         $servis = Servis::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
         return response()->json($servis);
+    }
+
+    /**
+     * Daftar produk untuk pemilih sparepart (hanya cabang aktif).
+     */
+    public function produkData()
+    {
+        $produk = \App\Models\Produk::where('id_cabang', auth()->user()->id_cabang)
+            ->orderBy('nama_produk')
+            ->get(['id_produk', 'kode_produk', 'nama_produk', 'harga_jual', 'stok']);
+
+        return datatables()
+            ->of($produk)
+            ->addColumn('harga', fn ($p) => format_uang($p->harga_jual))
+            ->addColumn('aksi', fn ($p) => '<button class="btn btn-xs btn-success btn-flat" onclick="pilihProdukSparepart(' . $p->id_produk . ',\'' . e($p->kode_produk) . '\')"><i class="fa fa-check"></i> Pilih</button>')
+            ->rawColumns(['aksi'])
+            ->make(true);
+    }
+
+    /**
+     * DataTables sparepart milik satu servis.
+     */
+    public function sparepartData($id)
+    {
+        $servis = Servis::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
+        $items = \App\Models\ServisSparepart::with('produk')
+            ->where('id_servis', $servis->id_servis)
+            ->orderBy('id_servis_sparepart')
+            ->get();
+
+        return datatables()
+            ->of($items)
+            ->addIndexColumn()
+            ->addColumn('kode_produk', fn ($i) => optional($i->produk)->kode_produk)
+            ->addColumn('nama_produk', fn ($i) => optional($i->produk)->nama_produk)
+            ->addColumn('harga', fn ($i) => format_uang($i->harga_jual))
+            ->addColumn('subtotal', fn ($i) => format_uang($i->subtotal))
+            ->addColumn('aksi', function ($i) use ($servis) {
+                if (in_array($servis->status, ['selesai', 'diambil'], true)) {
+                    return '<span class="text-muted">-</span>';
+                }
+                return '<button onclick="hapusSparepart(' . $i->id_servis_sparepart . ')" class="btn btn-xs btn-danger btn-flat"><i class="fa fa-trash"></i></button>';
+            })
+            ->rawColumns(['aksi'])
+            ->make(true);
+    }
+
+    /**
+     * Tambah sparepart (ambil dari stok barang).
+     */
+    public function sparepartStore(Request $request, $id)
+    {
+        $request->validate([
+            'id_produk' => 'required|integer',
+            'jumlah' => 'required|integer|min:1|max:100000',
+        ]);
+        $servis = Servis::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
+        abort_unless(
+            \App\Models\Produk::where('id_cabang', auth()->user()->id_cabang)->where('id_produk', $request->id_produk)->exists(),
+            422
+        );
+
+        app(\App\Services\ServisSparepartService::class)->add(
+            (int) auth()->user()->id_cabang,
+            (int) $servis->id_servis,
+            (int) $request->id_produk,
+            (int) $request->jumlah
+        );
+
+        return response()->json('Sparepart ditambahkan', 200);
+    }
+
+    /**
+     * Hapus sparepart (kembalikan stok).
+     */
+    public function sparepartDestroy($id, $sparepart)
+    {
+        $servis = Servis::where('id_cabang', auth()->user()->id_cabang)->findOrFail($id);
+        app(\App\Services\ServisSparepartService::class)->remove(
+            (int) auth()->user()->id_cabang,
+            (int) $servis->id_servis,
+            (int) $sparepart
+        );
+
+        return response(null, 204);
     }
 
     public function track($kode)

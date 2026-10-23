@@ -19,6 +19,7 @@
                         [$name, $label, $type] = $field;
                         $options = $field[3] ?? [];
                         $default = $field[4] ?? (in_array($type, ['date', 'future-date']) ? now()->toDateString() : '');
+                        $optional = $field[5] ?? false;
                         $value = $restore ? old($name, $default) : $default;
                         $inputType = $type === 'future-date' ? 'date' : $type;
                         $fieldId = ($dialogId ?? $action) . '-' . $name;
@@ -35,9 +36,9 @@
                                 @foreach ($options as $key => $text)<option value="{{ $key }}" @if ((string) $value === (string) $key) selected @endif>{{ $text }}</option>@endforeach
                             </select>
                         @elseif ($type === 'textarea')
-                            <textarea class="form-control" id="{{ $fieldId }}" name="{{ $name }}" rows="3" required>{{ $value }}</textarea>
+                            <textarea class="form-control" id="{{ $fieldId }}" name="{{ $name }}" rows="3" @unless($optional) required @endunless>{{ $value }}</textarea>
                         @else
-                            <input class="form-control" id="{{ $fieldId }}" name="{{ $name }}" type="{{ $inputType }}" @if ($type !== 'file') value="{{ $value }}" @else accept=".csv,text/csv" @endif required @if ($type === 'number') min="0" step="1" @endif @if ($type === 'date') max="{{ now()->toDateString() }}" @endif>
+                            <input class="form-control" id="{{ $fieldId }}" name="{{ $name }}" type="{{ $inputType }}" @if ($type !== 'file') value="{{ $value }}" @else accept=".csv,text/csv" @endif @unless($optional) required @endunless @if ($type === 'number') min="0" step="1" @endif @if ($type === 'date') max="{{ now()->toDateString() }}" @endif>
                         @endif
                         </div>
                     </div>

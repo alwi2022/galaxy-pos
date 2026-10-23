@@ -7,6 +7,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Master</li>
     <li class="active">Daftar Produk</li>
 @endsection
 
@@ -70,10 +71,10 @@
                 {data: 'nama_produk'},
                 {data: 'nama_kategori'},
                 {data: 'merk'},
-                {data: 'harga_beli'},
-                {data: 'harga_jual'},
-                {data: 'diskon'},
-                {data: 'stok'},
+                {data: 'harga_beli', className: 'text-right'},
+                {data: 'harga_jual', className: 'text-right'},
+                {data: 'diskon', className: 'text-right'},
+                {data: 'stok', className: 'text-right'},
                 {data: 'aksi', searchable: false, sortable: false},
             ]
         });

@@ -37,15 +37,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 Route::get('/servis/track/{kode}', [ServisController::class, 'track'])->name('servis.track');
-// routes/web.php
-Route::get('/test-barcode', function() {
-    try {
-        $barcode = DNS1D::getBarcodePNG('123456789', 'C39');
-        return '<img src="data:image/png;base64,'.$barcode.'">';
-    } catch (Exception $e) {
-        return 'Error: ' . $e->getMessage();
-    }
-});
 Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite::class]], function () {
     Route::group(['middleware' => 'level:1'], function () {
         Route::get('/usaha/export/jurnal', [\App\Http\Controllers\BusinessController::class, 'export'])->name('business.export');

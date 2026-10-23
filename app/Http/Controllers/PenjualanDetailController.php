@@ -100,9 +100,7 @@ class PenjualanDetailController extends Controller
       public function getProdukByKode($kode_produk)
       {
           $produk = Produk::where('kode_produk', $kode_produk)
-              ->when(auth()->user()->level != 1, function($q) {
-                  return $q->where('id_cabang', auth()->user()->id_cabang);
-              })
+              ->where('id_cabang', auth()->user()->id_cabang)
               ->first();
   
           if (!$produk) {
@@ -191,6 +189,10 @@ class PenjualanDetailController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'jumlah' => 'required|integer|min:1',
+        ]);
+
         $detail = PenjualanDetail::find($id);
         $detail->jumlah = $request->jumlah;
         $detail->subtotal = $detail->harga_jual * $request->jumlah - (($detail->diskon * $request->jumlah) / 100 * $detail->harga_jual);;

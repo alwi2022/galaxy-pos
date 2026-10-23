@@ -6,6 +6,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Transaksi</li>
     <li class="active">Daftar Pembelian</li>
 @endsection
 
@@ -66,13 +67,13 @@
                 {data: 'DT_RowIndex', searchable: false, sortable: false},
                 {data: 'tanggal'},
                 {data: 'supplier'},
-                {data: 'total_item'},
-                {data: 'total_harga'},
-                {data: 'diskon'},
-                {data: 'ppn'},
-                {data: 'tagihan'},
-                {data: 'dibayar'},
-                {data: 'sisa'},
+                {data: 'total_item', className: 'text-right'},
+                {data: 'total_harga', className: 'text-right'},
+                {data: 'diskon', className: 'text-right'},
+                {data: 'ppn', className: 'text-right'},
+                {data: 'tagihan', className: 'text-right'},
+                {data: 'dibayar', className: 'text-right'},
+                {data: 'sisa', className: 'text-right'},
                 {data: 'skema_pembayaran'},
                 {data: 'metode_pembayaran'},
                 {data: 'jatuh_tempo'},
@@ -90,9 +91,9 @@
                 {data: 'DT_RowIndex', searchable: false, sortable: false},
                 {data: 'kode_produk'},
                 {data: 'nama_produk'},
-                {data: 'harga_beli'},
-                {data: 'jumlah'},
-                {data: 'subtotal'},
+                {data: 'harga_beli', className: 'text-right'},
+                {data: 'jumlah', className: 'text-right'},
+                {data: 'subtotal', className: 'text-right'},
             ]
         });
     });

@@ -53,8 +53,14 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'telepon' => 'required|string|max:255',
+            'alamat' => 'nullable|string|max:255',
+        ]);
+
         $request['id_cabang'] = auth()->user()->id_cabang;
-        $supplier = Supplier::create($request->all());
+        $supplier = Supplier::create($request->only(['nama', 'telepon', 'alamat', 'id_cabang']));
         
 
         return response()->json('Data berhasil disimpan', 200);
@@ -93,11 +99,17 @@ class SupplierController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'telepon' => 'required|string|max:255',
+            'alamat' => 'nullable|string|max:255',
+        ]);
+
         $supplier = Supplier::where('id_supplier', $id)
         ->where('id_cabang', auth()->user()->id_cabang)
         ->firstOrFail();
     
-    $supplier->update($request->all());
+    $supplier->update($request->only(['nama', 'telepon', 'alamat']));
     
 
         return response()->json('Data berhasil disimpan', 200);

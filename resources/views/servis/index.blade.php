@@ -8,6 +8,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Servis</li>
     <li class="active">Daftar Servis</li>
 @endsection
 

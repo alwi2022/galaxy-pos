@@ -20,6 +20,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Keuangan</li>
     <li class="active">Pembayaran Hutang Piutang</li>
 @endsection
 
@@ -202,9 +203,9 @@
                 {data: 'DT_RowIndex', searchable: false, sortable: false},
                 {data: 'tanggal'},
                 {data: 'pelanggan'},
-                {data: 'tagihan'},
-                {data: 'dibayar'},
-                {data: 'sisa'},
+                {data: 'tagihan', className: 'text-right'},
+                {data: 'dibayar', className: 'text-right'},
+                {data: 'sisa', className: 'text-right'},
                 {data: 'jatuh_tempo'},
                 {data: 'status_pembayaran'},
                 {data: 'aksi', searchable: false, sortable: false},
@@ -224,9 +225,9 @@
                 {data: 'DT_RowIndex', searchable: false, sortable: false},
                 {data: 'tanggal'},
                 {data: 'supplier'},
-                {data: 'tagihan'},
-                {data: 'dibayar'},
-                {data: 'sisa'},
+                {data: 'tagihan', className: 'text-right'},
+                {data: 'dibayar', className: 'text-right'},
+                {data: 'sisa', className: 'text-right'},
                 {data: 'jatuh_tempo'},
                 {data: 'status_pembayaran'},
                 {data: 'aksi', searchable: false, sortable: false},

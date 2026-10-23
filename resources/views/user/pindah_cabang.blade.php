@@ -4,6 +4,12 @@
     Pindah Cabang
 @endsection
 
+@section('breadcrumb')
+    @parent
+    <li>Cabang</li>
+    <li class="active">Pindah Cabang</li>
+@endsection
+
 @section('content')
 <div class="box">
     <div class="box-body">

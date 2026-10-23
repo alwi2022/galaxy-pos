@@ -67,6 +67,12 @@ class MemberController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'telepon' => 'required|string|max:20',
+            'alamat' => 'nullable|string|max:255',
+        ]);
+
         $member = Member::latest()->first() ?? new Member();
         $kode_member = (int) $member->kode_member + 1;
 
@@ -114,11 +120,17 @@ class MemberController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'telepon' => 'required|string|max:20',
+            'alamat' => 'nullable|string|max:255',
+        ]);
+
         $member = Member::where('id_member', $id)
             ->where('id_cabang', auth()->user()->id_cabang)
             ->firstOrFail();
 
-        $member->update($request->all());
+        $member->update($request->only(['nama', 'telepon', 'alamat']));
 
         return response()->json('Data berhasil disimpan', 200);
     }

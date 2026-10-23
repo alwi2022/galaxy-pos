@@ -5,10 +5,16 @@
     Manajemen Cabang
 @endsection
 
+@section('breadcrumb')
+    @parent
+    <li>Cabang</li>
+    <li class="active">Data Cabang</li>
+@endsection
+
 @section('content')
 <div class="box">
     <div class="box-header with-border">
-        <button onclick="tambahCabang()" class="btn btn-success btn-sm"><i class="fa fa-plus-circle"></i> Tambah Cabang</button>
+        <button onclick="tambahCabang()" class="btn btn-success btn-xs btn-flat"><i class="fa fa-plus-circle"></i> Tambah Cabang</button>
     </div>
     <div class="box-body table-responsive">
         <table class="table table-bordered table-striped" id="table-cabang">

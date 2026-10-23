@@ -6,6 +6,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Master</li>
     <li class="active">Daftar Member</li>
 @endsection
 

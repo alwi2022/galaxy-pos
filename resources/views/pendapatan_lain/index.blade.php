@@ -6,6 +6,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Keuangan</li>
     <li class="active">Pendapatan Lain</li>
 @endsection
 
@@ -15,7 +16,7 @@
         <div class="box">
             <div class="box-header with-border">
                 <div class="toolbar-inline">
-                    <button onclick="addForm('{{ route('pendapatan-lain.store') }}')" class="btn btn-success btn-sm btn-flat"><i class="fa fa-plus-circle"></i> Tambah Pendapatan</button>
+                    <button onclick="addForm('{{ route('pendapatan-lain.store') }}')" class="btn btn-success btn-xs btn-flat"><i class="fa fa-plus-circle"></i> Tambah Pendapatan</button>
                     <span class="text-muted">Contoh penggunaan: penjualan barang bekas, kardus bekas, atau pemasukan lain-lain.</span>
                 </div>
             </div>
@@ -59,7 +60,7 @@
                 {data: 'kategori_pendapatan'},
                 {data: 'deskripsi'},
                 {data: 'metode_pembayaran'},
-                {data: 'nominal'},
+                {data: 'nominal', className: 'text-right'},
                 {data: 'aksi', searchable: false, sortable: false},
             ]
         });

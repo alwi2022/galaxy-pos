@@ -6,6 +6,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Transaksi</li>
     <li class="active">Transaksi Penjualan</li>
 @endsection
 

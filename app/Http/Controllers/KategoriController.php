@@ -57,6 +57,10 @@ class KategoriController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'nama_kategori' => 'required|string|max:100',
+        ]);
+
         $kategori = new Kategori();
         $kategori->nama_kategori = $request->nama_kategori;
         $kategori->id_cabang = auth()->user()->id_cabang;
@@ -98,6 +102,10 @@ class KategoriController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'nama_kategori' => 'required|string|max:100',
+        ]);
+
         $kategori = Kategori::find($id);
         $kategori->nama_kategori = $request->nama_kategori;
         $kategori->update();

@@ -66,7 +66,8 @@
 
 @section('breadcrumb')
     @parent
-    <li class="active">Transaksi Penjaualn</li>
+    <li>Transaksi</li>
+    <li class="active">Transaksi Penjualan</li>
 @endsection
 
 @section('content')
@@ -265,10 +266,10 @@ let table, table2;
             {data: 'DT_RowIndex', searchable: false, sortable: false},
             {data: 'kode_produk'},
             {data: 'nama_produk'},
-            {data: 'harga_jual'},
+            {data: 'harga_jual', className: 'text-right'},
             {data: 'jumlah'},
-            {data: 'diskon'},
-            {data: 'subtotal'},
+            {data: 'diskon', className: 'text-right'},
+            {data: 'subtotal', className: 'text-right'},
             {data: 'aksi', searchable: false, sortable: false},
         ],
         dom: 'Brt',
@@ -283,6 +284,40 @@ let table, table2;
     });
 
     table2 = $('.table-produk').DataTable();
+
+    $('#kode_produk').on('keydown', function (e) {
+        if (e.key !== 'Enter') {
+            return;
+        }
+
+        e.preventDefault();
+
+        let kode = $(this).val().trim();
+        if (kode === '') {
+            return;
+        }
+
+        $.post('{{ route('transaksi.tambah_barcode') }}', {
+                '_token': $('[name=csrf-token]').attr('content'),
+                'id_penjualan': $('#id_penjualan').val(),
+                'kode_produk': kode
+            })
+            .done(() => {
+                $('#kode_produk').val('').focus();
+                table.ajax.reload(() => loadForm($('#diskon').val(), $('#diterima').val()));
+            })
+            .fail((xhr) => {
+                let pesan = xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : 'Produk tidak ditemukan';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: pesan
+                });
+                $('#kode_produk').val('').focus();
+            });
+    });
 
     $(document).on('input', '.quantity', function () {
         let id = $(this).data('id');

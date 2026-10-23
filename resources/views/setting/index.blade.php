@@ -6,6 +6,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>System</li>
     <li class="active">Pengaturan</li>
 @endsection
 

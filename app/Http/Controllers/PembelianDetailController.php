@@ -108,6 +108,10 @@ class PembelianDetailController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'jumlah' => 'required|integer|min:1',
+        ]);
+
         $detail = PembelianDetail::find($id);
         $detail->jumlah = $request->jumlah;
         $detail->subtotal = $detail->harga_beli * $request->jumlah;

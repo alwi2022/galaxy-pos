@@ -7,6 +7,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Laporan</li>
     <li class="active">Laporan</li>
 @endsection
 

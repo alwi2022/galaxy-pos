@@ -74,6 +74,7 @@
 
 @section('breadcrumb')
     @parent
+    <li>Transaksi</li>
     <li class="active">Transaksi Pembelian</li>
 @endsection
 
@@ -254,6 +255,15 @@
     $(function () {
         $('body').addClass('sidebar-collapse');
 
+        // Cegah Enter pada input kode produk men-submit form GET.
+        // Endpoint barcode khusus pembelian belum tersedia, jadi arahkan ke pencarian modal.
+        $('#kode_produk').on('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                tampilProduk();
+            }
+        });
+
         table = $('.table-pembelian').DataTable({
             responsive: false,
             processing: true,
@@ -267,9 +277,9 @@
                 {data: 'DT_RowIndex', searchable: false, sortable: false},
                 {data: 'kode_produk'},
                 {data: 'nama_produk'},
-                {data: 'harga_beli'},
-                {data: 'jumlah'},
-                {data: 'subtotal'},
+                {data: 'harga_beli', className: 'text-right'},
+                {data: 'jumlah', className: 'text-right'},
+                {data: 'subtotal', className: 'text-right'},
                 {data: 'aksi', searchable: false, sortable: false},
             ],
             dom: 'Brt',

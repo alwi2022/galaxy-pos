@@ -114,7 +114,11 @@ class BusinessController extends Controller
         $finance = app(BusinessFinanceService::class);
         switch ($action) {
             case 'service-pay':
-                $d = $request->validate(['date' => $dateRules, 'id' => 'required|integer', 'cash' => 'required|string', 'amount' => 'required|integer|min:1|max:2000000000', 'description' => 'required|string|max:350']);
+                $d = $request->validate(['date' => $dateRules, 'id' => 'required|integer', 'cash' => 'required|string', 'amount' => 'required|integer|min:1|max:2000000000', 'description' => 'nullable|string|max:350']);
+                if (blank($d['description'] ?? null)) {
+                    $service = DB::table('servis')->where('id_cabang', $branch)->where('id_servis', (int) $d['id'])->first();
+                    $d['description'] = 'Pembayaran servis ' . ($service->kode_servis ?? $d['id']);
+                }
                 app(\App\Services\ServicePaymentService::class)->pay($branch, (int) $d['id'], $d);
                 break;
             case 'service-cancel-payment':
@@ -249,7 +253,9 @@ class BusinessController extends Controller
 
     public function export(Request $request)
     {
-        $d = $request->validate(['start' => 'required|date_format:Y-m-d', 'end' => 'required|date_format:Y-m-d|after_or_equal:start']);
+        $d = $request->validate(['start' => 'nullable|date_format:Y-m-d', 'end' => 'nullable|date_format:Y-m-d|after_or_equal:start']);
+        $d['start'] = $d['start'] ?? now()->startOfMonth()->toDateString();
+        $d['end'] = $d['end'] ?? now()->endOfMonth()->toDateString();
         $rows = DB::table('ledger_lines as l')->join('ledger_entries as e', 'e.id', '=', 'l.entry_id')->join('ledger_accounts as a', 'a.id', '=', 'l.account_id')->where('e.id_cabang', auth()->user()->id_cabang)->whereBetween('e.date', [$d['start'], $d['end']])->orderBy('e.date')->orderBy('e.id')->select('e.date', 'e.reference', 'e.description', 'a.code', 'a.name', 'l.debit', 'l.credit')->get();
         return response()->streamDownload(function () use ($rows) {
             $stream = fopen('php://output', 'w');

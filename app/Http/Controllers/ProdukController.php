@@ -89,8 +89,11 @@ class ProdukController extends Controller
         abort_unless(Kategori::where('id_cabang', auth()->user()->id_cabang)->where('id_kategori', $request->id_kategori)->exists(), 422);
         \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
         $initialStock = (int) $request->stok;
-        $produk = Produk::latest()->first() ?? new Produk();
-        $request['kode_produk'] = 'P'. tambah_nol_didepan((int)$produk->id_produk +1, 6);
+        $next = (int) Produk::max('id_produk') + 1;
+        while (Produk::where('kode_produk', 'P' . tambah_nol_didepan($next, 6))->exists()) {
+            $next++;
+        }
+        $request['kode_produk'] = 'P' . tambah_nol_didepan($next, 6);
         $request['id_cabang'] = auth()->user()->id_cabang;
         $produk = Produk::create($request->only(['nama_produk', 'id_kategori', 'merk', 'harga_beli', 'harga_jual', 'diskon', 'kode_produk', 'id_cabang']) + ['stok' => 0]);
         if ($initialStock > 0) {

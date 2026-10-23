@@ -88,27 +88,47 @@ class ServisSparepartService
             $row = DB::table('servis_sparepart')->where('id_cabang', $branch)->where('id_servis', $servisId)->where('id_servis_sparepart', $sparepartId)->first();
             abort_unless($row, 404);
 
-            // Kembalikan stok (barang batal dipakai) dan balik jurnal HPP.
-            app(StockLedgerService::class)->move(
-                $branch,
-                $row->id_produk,
-                $row->jumlah,
-                'CANCEL-' . $row->reference,
-                'Pembatalan sparepart servis ' . $servis->kode_servis,
-                now()->toDateTimeString(),
-                (int) $row->unit_cost,
-                (int) $row->cost_total
-            );
-            if ((int) $row->cost_total > 0) {
-                $entry = DB::table('ledger_entries')->where('id_cabang', $branch)->where('reference', $row->reference)->first();
-                if ($entry) {
-                    $ledger->reverse($branch, $entry->id, now()->toDateString());
-                }
-            }
-
-            DB::table('servis_sparepart')->where('id_servis_sparepart', $sparepartId)->delete();
+            $this->restore($branch, $servis, $row);
             $this->syncTotal($servisId);
         });
+    }
+
+    /**
+     * Kembalikan semua sparepart ke stok saat servis dibatalkan.
+     * Dipanggil dari dalam transaksi pembatalan servis.
+     */
+    public function restoreAll(int $branch, object $servis): void
+    {
+        $rows = DB::table('servis_sparepart')->where('id_cabang', $branch)->where('id_servis', $servis->id_servis)->orderBy('id_servis_sparepart')->get();
+        foreach ($rows as $row) {
+            $this->restore($branch, $servis, $row);
+        }
+        if ($rows->isNotEmpty()) {
+            $this->syncTotal((int) $servis->id_servis);
+        }
+    }
+
+    private function restore(int $branch, object $servis, object $row): void
+    {
+        // Kembalikan stok (barang batal dipakai) dan balik jurnal HPP.
+        app(StockLedgerService::class)->move(
+            $branch,
+            $row->id_produk,
+            $row->jumlah,
+            'CANCEL-' . $row->reference,
+            'Pembatalan sparepart servis ' . $servis->kode_servis,
+            now()->toDateTimeString(),
+            (int) $row->unit_cost,
+            (int) $row->cost_total
+        );
+        if ((int) $row->cost_total > 0) {
+            $entry = DB::table('ledger_entries')->where('id_cabang', $branch)->where('reference', $row->reference)->first();
+            if ($entry) {
+                app(LedgerService::class)->reverse($branch, $entry->id, now()->toDateString());
+            }
+        }
+
+        DB::table('servis_sparepart')->where('id_servis_sparepart', $row->id_servis_sparepart)->delete();
     }
 
     private function syncTotal(int $servisId): void

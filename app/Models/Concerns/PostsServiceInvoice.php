@@ -74,6 +74,7 @@ trait PostsServiceInvoice
             if ($current->ledger_entry_id) {
                 $ledger->reverse((int) $current->id_cabang, $current->ledger_entry_id, now()->toDateString());
             }
+            app(\App\Services\ServisSparepartService::class)->restoreAll((int) $current->id_cabang, $current);
             DB::table('servis')->where('id_servis', $this->getKey())->update(['cancelled_at' => now(), 'sisa' => 0]);
             return true;
         });

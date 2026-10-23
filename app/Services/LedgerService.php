@@ -45,6 +45,9 @@ class LedgerService
         if (! DB::table('cabang')->where('id_cabang', $branch)->exists()) {
             $this->fail('Pilih cabang toko yang valid terlebih dahulu.');
         }
+        if (DB::table('ledger_accounts')->where('id_cabang', $branch)->whereIn('code', array_map('strval', array_keys(self::ACCOUNTS)))->count() === count(self::ACCOUNTS)) {
+            return;
+        }
         foreach (self::ACCOUNTS as $code => [$name, $type, $cash]) {
             DB::table('ledger_accounts')->insertOrIgnore(['id_cabang' => $branch, 'code' => (string) $code, 'name' => $name, 'type' => $type, 'cash_account' => $cash, 'created_at' => now(), 'updated_at' => now()]);
         }

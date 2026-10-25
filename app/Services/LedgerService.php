@@ -124,9 +124,9 @@ class LedgerService
         });
     }
 
-    public function cashCode(string $method): string
+    public function cashCode(string $method, int $branch): string
     {
-        return ['tunai' => '1101', 'transfer_bank' => '1102', 'qris' => '1103'][$method] ?? '1101';
+        return app(PaymentMethodService::class)->cashCode($branch, $method);
     }
 
     public function balances(int $branch, string $end, ?string $start = null, bool $excludeClosing = false)

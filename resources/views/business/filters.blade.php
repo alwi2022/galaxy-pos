@@ -1,14 +1,14 @@
 <x-filter-panel>
     <form method="get" class="business-filters toolbar-inline">
         <input type="hidden" name="tab" value="{{ request('tab') }}">
-        @if($module !== 'pajak')
+        @if($module === 'pajak')
+        <label for="filter-month" class="control-label">Masa Pajak</label>
+        <input type="month" class="form-control input-sm" id="filter-month" name="month" value="{{ $taxMonth }}" required>
+        @elseif($module !== 'rekening-bank')
         <label for="filter-start" class="control-label">Tanggal Awal</label>
         <input class="form-control input-sm" type="date" id="filter-start" name="start" value="{{ $start }}" required>
         <label for="filter-end" class="control-label">Tanggal Akhir</label>
         <input class="form-control input-sm" type="date" id="filter-end" name="end" value="{{ $end }}" required>
-        @else
-        <label for="filter-month" class="control-label">Masa Pajak</label>
-        <input type="month" class="form-control input-sm" id="filter-month" name="month" value="{{ $taxMonth }}" required>
         @endif
         @if(config('business.' . $module . '.statuses') && (!$financialReport || $financialReport === 'tax'))
         <span class="filter-group business-status-filter">

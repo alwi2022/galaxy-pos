@@ -17,6 +17,8 @@
     {{ format_uang($row->amount-$row->recognized) }}
 @elseif($format === 'enum')
     {{ $column['options'][$value]??$value }}
+@elseif($format === 'active')
+    <span class="label {{ $value?'label-success':'label-default' }}">{{ $value?'Aktif':'Nonaktif' }}</span>
 @elseif($format === 'matched')
     <span class="label {{ $value?'label-success':'label-warning' }}">{{ $value?'Sudah cocok':'Belum cocok' }}</span>
 @elseif($format === 'retur-condition')

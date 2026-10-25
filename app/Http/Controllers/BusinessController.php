@@ -41,8 +41,13 @@ class BusinessController extends Controller
         $movements = $this->listing(DB::table('stock_movements as m')->join('produk as p', 'p.id_produk', '=', 'm.id_produk')->where('m.id_cabang', $branch)->whereBetween('m.occurred_at', [$start . ' 00:00:00', $end . ' 23:59:59'])->when($request->product, fn ($query) => $query->where('m.id_produk', $request->product))->select('m.*', 'p.nama_produk')->orderByDesc('m.id'), ['p.nama_produk', 'm.reason', 'm.reference'], $q, $perPage, 'stock_page');
         $returns = $this->listing(DB::table('stock_returns as r')->join('produk as p', 'p.id_produk', '=', 'r.id_produk')->where('r.id_cabang', $branch)->whereBetween('r.date', [$start, $end])->when($module === 'retur' && $status, fn ($query) => $query->where('r.type', $status))->select('r.*', 'p.nama_produk')->orderByDesc('r.id'), ['p.nama_produk', 'r.reason', 'r.type'], $q, $perPage, 'return_page');
         $entries = $this->listing(DB::table('ledger_lines as l')->join('ledger_entries as e', 'e.id', '=', 'l.entry_id')->join('ledger_accounts as a', 'a.id', '=', 'l.account_id')->where('e.id_cabang', $branch)->whereBetween('e.date', [$start, $end])->when($request->account, fn ($query) => $query->where('a.code', $request->account))->select('e.id', 'e.date', 'e.reference', 'e.description', 'a.code', 'a.name', 'a.cash_account', 'l.debit', 'l.credit')->orderByDesc('e.date')->orderByDesc('e.id')->orderBy('l.id'), ['e.reference', 'e.description', 'a.name', 'a.code'], $q, $perPage, 'journal_page');
+        if ($module === 'rekening-bank') {
+            app(\App\Services\PaymentMethodService::class)->all($branch);
+        }
+        $bankSums = DB::table('ledger_lines')->selectRaw('account_id, SUM(debit) - SUM(credit) as saldo')->groupBy('account_id');
+        $bankAccountRows = $this->listing(DB::table('payment_methods as m')->leftJoin('ledger_accounts as a', fn ($join) => $join->on('a.id_cabang', '=', 'm.id_cabang')->on('a.code', '=', 'm.account_code'))->leftJoinSub($bankSums, 's', 's.account_id', '=', 'a.id')->where('m.id_cabang', $branch)->where('m.type', 'bank')->when($module === 'rekening-bank' && $status, fn ($query) => $query->where('m.active', $status === 'active'))->select('m.*')->selectRaw('COALESCE(s.saldo, 0) as saldo')->orderBy('m.id'), ['m.bank_name', 'm.account_number', 'm.account_holder', 'm.city'], $q, $perPage, 'bank_account_page');
         $assets = DB::table('business_assets')->where('id_cabang', $branch)->orderByDesc('id')->get();
-        $loans = DB::table('business_loans')->where('id_cabang', $branch)->orderByDesc('id')->get();
+        $loans =DB::table('business_loans')->where('id_cabang', $branch)->orderByDesc('id')->get();
         $deferrals = DB::table('business_deferrals')->where('id_cabang', $branch)->orderByDesc('id')->get();
         $assetRows = $this->listing(DB::table('business_assets')->where('id_cabang', $branch)->whereBetween('purchased_at', [$start, $end])->when($module === 'aset' && $status === 'active', fn ($query) => $query->whereNull('disposed_at'))->when($module === 'aset' && $status === 'disposed', fn ($query) => $query->whereNotNull('disposed_at'))->orderByDesc('id'), ['name'], $q, $perPage, 'asset_page');
         $loanRows = $this->listing(DB::table('business_loans')->where('id_cabang', $branch)->whereBetween('date', [$start, $end])->when($module === 'pinjaman' && $status === 'open', fn ($query) => $query->where('outstanding', '>', 0))->when($module === 'pinjaman' && $status === 'paid', fn ($query) => $query->where('outstanding', 0))->orderByDesc('id'), ['party', 'direction'], $q, $perPage, 'loan_page');
@@ -71,7 +76,7 @@ class BusinessController extends Controller
         }
         $sales = $module === 'retur' && !$request->has('data_table') ? DB::table('penjualan')->where('id_cabang', $branch)->whereNotNull('posted_at')->whereNull('cancelled_at')->orderByDesc('id_penjualan')->get() : collect();
         $purchases = $module === 'retur' && !$request->has('data_table') ? DB::table('pembelian')->where('id_cabang', $branch)->whereNotNull('posted_at')->whereNull('cancelled_at')->orderByDesc('id_pembelian')->get() : collect();
-        $data = compact('module', 'start', 'end', 'accounts', 'balances', 'periodBalances', 'profit', 'cumulativeProfit', 'products', 'movements', 'returns', 'entries', 'assets', 'loans', 'deferrals', 'periods', 'sales', 'purchases', 'reconciliations', 'cashFlows', 'assetRows', 'loanRows', 'deferralRows', 'serviceOptions', 'serviceRows', 'servicePayments', 'bankRows', 'bankCandidates', 'taxMonth', 'taxProfile', 'taxEvents', 'taxInvoices', 'taxReturns', 'taxReturnOptions', 'taxPayments', 'years');
+        $data = compact('module', 'start', 'end', 'accounts', 'balances', 'periodBalances', 'profit', 'cumulativeProfit', 'products', 'movements', 'returns', 'entries', 'assets', 'loans', 'deferrals', 'periods', 'sales', 'purchases', 'reconciliations', 'cashFlows', 'assetRows', 'loanRows', 'deferralRows', 'serviceOptions', 'serviceRows', 'servicePayments', 'bankRows', 'bankCandidates', 'bankAccountRows', 'taxMonth', 'taxProfile', 'taxEvents', 'taxInvoices', 'taxReturns', 'taxReturnOptions', 'taxPayments', 'years');
         if ($request->has('data_table')) {
             $records = $data[$definition['records']];
             $rows = [];
@@ -180,7 +185,7 @@ class BusinessController extends Controller
                 app(StockLedgerService::class)->adjustment($branch, (int) $d['product'], (int) $d['quantity'], $d['type'], $d['reason'], $d['date'] . ' ' . now()->format('H:i:s'));
                 break;
             case 'return':
-                $d = $request->validate(['date' => $dateRules, 'type' => 'required|in:penjualan,pembelian', 'transaction_id' => 'required|integer', 'detail_id' => 'required|integer', 'quantity' => 'required|integer|min:1', 'restock' => 'nullable|boolean', 'method' => 'required|in:tunai,transfer_bank,qris', 'reason' => 'required|string|max:400']);
+                $d = $request->validate(['date' => $dateRules, 'type' => 'required|in:penjualan,pembelian', 'transaction_id' => 'required|integer', 'detail_id' => 'required|integer', 'quantity' => 'required|integer|min:1', 'restock' => 'nullable|boolean', 'method' => ['required', \Illuminate\Validation\Rule::in(array_keys(daftar_metode_pembayaran()))], 'reason' => 'required|string|max:400']);
                 app(BusinessTransactionService::class)->returnItem($branch, $d);
                 break;
             case 'money':
@@ -194,15 +199,17 @@ class BusinessController extends Controller
                 DB::table('cash_reconciliations')->insert(['id_cabang' => $branch, 'account_id' => $balance->id, 'date' => $d['date'], 'statement_balance' => $d['amount'], 'system_balance' => $balance->balance, 'note' => $d['description'], 'id_user' => auth()->id(), 'created_at' => now(), 'updated_at' => now()]);
                 break;
             case 'account':
-                $d = $request->validate(['name' => 'required|string|max:150']);
-                DB::transaction(function () use ($branch, $d) {
-                    $row = DB::table('cabang')->where('id_cabang', $branch)->lockForUpdate()->first();
-                    abort_unless($row, 404);
-                    $max = DB::table('ledger_accounts')->where('id_cabang', $branch)->where('code', 'like', '11%')->max('code');
-                    $code = (string) max(1110, (int) $max + 1);
-                    DB::table('ledger_accounts')->insert(['id_cabang' => $branch, 'code' => $code, 'name' => $d['name'], 'type' => 'asset', 'cash_account' => true, 'created_at' => now(), 'updated_at' => now()]);
-                });
+                $d = $request->validate(['name' => 'required|string|max:60']);
+                app(\App\Services\PaymentMethodService::class)->storeBank($branch, ['bank_name' => $d['name']]);
                 break;
+            case 'bank-account':
+                $d = $request->validate($this->bankRules());
+                app(\App\Services\PaymentMethodService::class)->storeBank($branch, $d);
+                return back()->with('success', 'Rekening bank berhasil ditambahkan.');
+            case 'bank-account-update':
+                $d = $request->validate($this->bankRules() + ['id' => 'required|integer', 'active' => 'required|boolean']);
+                app(\App\Services\PaymentMethodService::class)->updateBank($branch, (int) $d['id'], $d);
+                return back()->with('success', 'Rekening bank berhasil diperbarui.');
             case 'loan':
                 $d = $request->validate(['date' => $dateRules, 'party' => 'required|string|max:150', 'direction' => 'required|in:borrowed,lent', 'due_date' => 'required|date_format:Y-m-d|after_or_equal:date', 'cash' => 'required|string', 'amount' => 'required|integer|min:1|max:2000000000']);
                 $finance->loan($branch, $d);
@@ -266,6 +273,11 @@ class BusinessController extends Controller
             }
             fclose($stream);
         }, 'jurnal-' . $d['start'] . '-' . $d['end'] . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function bankRules(): array
+    {
+        return ['bank_name' => 'required|string|max:60', 'account_number' => 'nullable|string|max:40', 'account_holder' => 'nullable|string|max:80', 'address' => 'nullable|string|max:200', 'city' => 'nullable|string|max:60', 'phone' => 'nullable|string|max:30'];
     }
 
     private function listing($query, array $columns, string $search, int $perPage, string $page)

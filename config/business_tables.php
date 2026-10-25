@@ -10,7 +10,10 @@ return [
     'return_page' => $table('retur', 'returns', 'Retur Barang', [
         $column('date','Tanggal','date','r.date'), $column('type','Sumber','text','r.type'), $column('transaction_id','No. Transaksi','number','r.transaction_id'), $column('nama_produk','Produk','text','p.nama_produk'), $column('quantity','Jumlah','number','r.quantity'), $column('amount','Nilai Retur','money','r.amount'), $column('refund','Uang Kembali','money','r.refund'), $column('','Kondisi','retur-condition'), $column('reason','Alasan','text','r.reason'),
     ]),
-    'loan_page' => $table('pinjaman', 'loanRows', 'Pinjaman', [
+    'bank_account_page' => $table('rekening-bank', 'bankAccountRows', 'Rekening Bank', [
+        $column('bank_name','Nama Bank','text','m.bank_name'), $column('account_number','No. Rekening','text','m.account_number'), $column('account_holder','Atas Nama','text','m.account_holder'), $column('address','Alamat','text','m.address'), $column('city','Kota','text','m.city'), $column('phone','Telepon','text','m.phone'), $column('account_code','Akun','text','m.account_code'), $column('saldo','Saldo','money','saldo'), $column('active','Status','active','m.active'), $column('','Tindakan','actions'),
+    ], 'bank-account'),
+    'loan_page' =>$table('pinjaman', 'loanRows', 'Pinjaman', [
         $column('date','Tanggal','date','date'), $column('party','Pihak','text','party'), $column('direction','Jenis','enum','direction',['borrowed'=>'Utang toko','lent'=>'Piutang toko']), $column('due_date','Jatuh Tempo','date','due_date'), $column('principal','Pokok','money','principal'), $column('outstanding','Sisa','money','outstanding'),
     ]),
     'asset_page' => $table('aset', 'assetRows', 'Inventaris', [

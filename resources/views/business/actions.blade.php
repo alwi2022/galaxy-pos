@@ -7,6 +7,10 @@
     @include('business.form',['title'=>'Tambah rekening','action'=>'account','fields'=>[['name','Nama rekening / kas','text']],'button'=>'Tambah rekening'])
     @include('business.form',['title'=>'Cocokkan saldo','action'=>'reconcile','fields'=>[$dateField,$cashField,['amount','Saldo rekening koran / kas fisik (Rp)','number'],$descriptionField]])
     @include('business.form',['title'=>'Balik transaksi kas','action'=>'reverse','fields'=>[$dateField,['id','ID jurnal transaksi kas','number']]])
+@elseif ($module === 'rekening-bank')
+    @php $bankFields=[['bank_name','Nama bank (mis. BCA Cilegon)','text'],['account_number','No. rekening','text',[],'',true],['account_holder','Atas nama','text',[],'',true],['address','Alamat bank','text',[],'',true],['city','Kota','text',[],'',true],['phone','Telepon','text',[],'',true]]; @endphp
+    @include('business.form',['title'=>'Tambah rekening bank','action'=>'bank-account','primary'=>true,'fields'=>$bankFields,'hint'=>'Rekening aktif langsung muncul di pilihan Cara Bayar = Bank pada semua transaksi. Saldo awal dicatat lewat menu Kas, Bank & Modal.'])
+    @include('business.form',['title'=>'Ubah rekening bank','action'=>'bank-account-update','hideTrigger'=>true,'fields'=>array_merge([['id','','hidden']],$bankFields,[['active','Status','select',['1'=>'Aktif','0'=>'Nonaktif']]])])
 @elseif ($module === 'pinjaman')
     @include('business.form',['title'=>'Catat pinjaman','action'=>'loan','primary'=>true,'fields'=>[$dateField,['party','Nama pihak / bank','text'],['direction','Jenis pinjaman','select',['borrowed'=>'Toko menerima pinjaman','lent'=>'Toko memberi pinjaman']],['due_date','Jatuh tempo','future-date'], $cashField,$amountField]])
     @include('business.form',['title'=>'Catat cicilan','action'=>'repay','fields'=>[$dateField,['id','Pinjaman','select',$loans->where('outstanding','>',0)->mapWithKeys(fn($l)=>[$l->id=>$l->party.' - sisa Rp'.format_uang($l->outstanding)])->all()],['principal','Pokok (Rp)','number'],['interest','Bunga (Rp)','number',[],0],$cashField]])

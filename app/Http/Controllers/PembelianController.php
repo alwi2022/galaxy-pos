@@ -134,7 +134,7 @@ class PembelianController extends Controller
             'diskon' => 'nullable|numeric|min:0|max:100',
             'nominal_dibayar' => 'nullable|integer|min:0',
             'skema_pembayaran' => 'required|in:langsung,kredit',
-            'metode_pembayaran' => 'required|in:tunai,transfer_bank,qris',
+            'metode_pembayaran' => ['required', \Illuminate\Validation\Rule::in(array_keys(daftar_metode_pembayaran()))],
             'jatuh_tempo' => 'nullable|required_if:skema_pembayaran,kredit|date',
         ]);
 

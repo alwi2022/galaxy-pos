@@ -36,17 +36,9 @@
                             <span class="help-block with-errors"></span>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="metode_pembayaran" class="col-lg-3 control-label">Metode</label>
-                        <div class="col-lg-7">
-                            <select name="metode_pembayaran" id="metode_pembayaran" class="form-control" required>
-                                @foreach (daftar_metode_pembayaran() as $value => $label)
-                                <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            <span class="help-block with-errors"></span>
-                        </div>
-                    </div>
+                    <x-cara-bayar>
+                        <span class="help-block with-errors"></span>
+                    </x-cara-bayar>
                     <div class="form-group row">
                         <label for="nominal" class="col-lg-3 control-label">Nominal</label>
                         <div class="col-lg-7">

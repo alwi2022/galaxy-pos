@@ -62,12 +62,14 @@
     <br>
 
     <div>
-        <p style="float: left;">{{ date('d-m-Y') }}</p>
-        <p style="float: right;">{{ strtoupper(auth()->user()->name) }}</p>
+        <p style="float: left;">{{ \Carbon\Carbon::parse($tanggal)->format('d-m-Y') }}</p>
+        <p style="float: right;">{{ strtoupper($penjualan->user->name ?? '-') }}</p>
     </div>
     <div style="clear: both;"></div>
 
     <p>No: {{ tambah_nol_didepan($penjualan->id_penjualan, 10) }}</p>
+    <p>Customer: {{ strtoupper($penjualan->member->nama ?? 'UMUM') }}</p>
+    @if ($penjualan->member && filled($penjualan->member->telepon))<p>Telp: {{ $penjualan->member->telepon }}</p>@endif
     <p class="text-center">===================================</p>
 
     <table width="100%" style="border: 0;">
@@ -126,9 +128,24 @@
             <td>Status:</td>
             <td class="text-right">{{ label_status_pembayaran($penjualan->status_pembayaran) }}</td>
         </tr>
+        @if ($penjualan->sisa > 0 && $penjualan->jatuh_tempo)
+        <tr>
+            <td>Jatuh Tempo:</td>
+            <td class="text-right">{{ $penjualan->jatuh_tempo->format('d-m-Y') }}</td>
+        </tr>
+        @endif
     </table>
 
+    <p># {{ strtoupper(trim(terbilang($penjualan->bayar))) }} RUPIAH #</p>
+    @if ($rekening->isNotEmpty())
+    <p class="text-center">-----------------------------------</p>
+    <p>Transfer sisa tagihan ke:</p>
+    @foreach ($rekening as $bank)
+    <p>{{ $bank->bank_name }} {{ $bank->account_number }}@if (filled($bank->account_holder)) a/n {{ $bank->account_holder }}@endif</p>
+    @endforeach
+    @endif
     <p class="text-center">===================================</p>
+    <p class="text-center">Barang yang sudah dibeli tidak bisa ditukar / dikembalikan</p>
     <p class="text-center">-- TERIMA KASIH --</p>
 
     <script>

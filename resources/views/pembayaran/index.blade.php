@@ -135,16 +135,7 @@
                                     <input type="number" name="nominal" id="nominal" class="form-control" min="1" required>
                                 </div>
                             </div>
-                            <div class="form-group row">
-                                <label for="metode_pembayaran" class="col-lg-4 control-label">Metode</label>
-                                <div class="col-lg-8">
-                                    <select name="metode_pembayaran" id="metode_pembayaran" class="form-control" required>
-                                        @foreach (collect(daftar_metode_pembayaran())->except(['qris']) as $value => $label)
-                                        <option value="{{ $value }}">{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                            <x-cara-bayar :except="['qris']" label-class="col-lg-4" field-class="col-lg-8"/>
                             <div class="form-group row">
                                 <label for="keterangan" class="col-lg-4 control-label">Keterangan</label>
                                 <div class="col-lg-8">

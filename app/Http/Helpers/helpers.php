@@ -5,26 +5,28 @@ function format_uang ($angka) {
 }
 
 function terbilang ($angka) {
-    $angka = abs($angka);
+    $angka = (int) abs($angka);
     $baca  = array('', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas');
     $terbilang = '';
 
     if ($angka < 12) { // 0 - 11
-        $terbilang = ' ' . $baca[$angka];
+        $terbilang = $angka ? ' ' . $baca[$angka] : '';
     } elseif ($angka < 20) { // 12 - 19
         $terbilang = terbilang($angka -10) . ' belas';
     } elseif ($angka < 100) { // 20 - 99
-        $terbilang = terbilang($angka / 10) . ' puluh' . terbilang($angka % 10);
+        $terbilang = terbilang(intdiv($angka, 10)) . ' puluh' . terbilang($angka % 10);
     } elseif ($angka < 200) { // 100 - 199
         $terbilang = ' seratus' . terbilang($angka -100);
     } elseif ($angka < 1000) { // 200 - 999
-        $terbilang = terbilang($angka / 100) . ' ratus' . terbilang($angka % 100);
+        $terbilang = terbilang(intdiv($angka, 100)) . ' ratus' . terbilang($angka % 100);
     } elseif ($angka < 2000) { // 1.000 - 1.999
         $terbilang = ' seribu' . terbilang($angka -1000);
     } elseif ($angka < 1000000) { // 2.000 - 999.999
-        $terbilang = terbilang($angka / 1000) . ' ribu' . terbilang($angka % 1000);
+        $terbilang = terbilang(intdiv($angka, 1000)) . ' ribu' . terbilang($angka % 1000);
     } elseif ($angka < 1000000000) { // 1000000 - 999.999.990
-        $terbilang = terbilang($angka / 1000000) . ' juta' . terbilang($angka % 1000000);
+        $terbilang = terbilang(intdiv($angka, 1000000)) . ' juta' . terbilang($angka % 1000000);
+    } elseif ($angka < 1000000000000) { // 1.000.000.000 - 999.999.999.999
+        $terbilang = terbilang(intdiv($angka, 1000000000)) . ' miliar' . terbilang($angka % 1000000000);
     }
 
     return $terbilang;
@@ -60,18 +62,18 @@ function tambah_nol_didepan($value, $threshold = null)
     return sprintf("%0". $threshold . "s", $value);
 }
 
-function daftar_metode_pembayaran()
+function daftar_metode_pembayaran($activeOnly = true)
 {
-    return [
-        'tunai' => 'Tunai',
-        'transfer_bank' => 'Bank / Transfer',
-        'qris' => 'QRIS',
-    ];
+    if (! app()->bound('db') || ! auth()->check()) {
+        return array_map(fn ($method) => $method[0], \App\Services\PaymentMethodService::DEFAULTS);
+    }
+
+    return app(\App\Services\PaymentMethodService::class)->options((int) auth()->user()->id_cabang, $activeOnly);
 }
 
 function label_metode_pembayaran($value)
 {
-    $options = daftar_metode_pembayaran();
+    $options = daftar_metode_pembayaran(false);
 
     return $options[$value] ?? ucfirst(str_replace('_', ' ', $value));
 }
@@ -165,4 +167,14 @@ function hitung_diskon_nominal($subtotal, $diskonPersen = 0)
     $diskonPersen = max((float) $diskonPersen, 0);
 
     return (int) round($subtotal * $diskonPersen / 100);
+}
+
+function label_cara_bayar_penjualan($penjualan)
+{
+    $metode = strtoupper(label_metode_pembayaran($penjualan->metode_pembayaran));
+    if ($penjualan->sisa <= 0) {
+        return $metode;
+    }
+
+    return (int) $penjualan->dibayar === 0 ? 'KREDIT' : 'BAYAR SEBAGIAN - ' . $metode;
 }

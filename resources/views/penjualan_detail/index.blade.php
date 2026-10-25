@@ -81,6 +81,15 @@
                 </div>
                 @endif
 
+                <form class="form-cari-nota pull-right" style="width: 320px; max-width: 100%;">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="cari_nomor_nota" inputmode="numeric" maxlength="20" placeholder="No. nota lama (cetak ulang)" aria-label="Nomor nota">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default btn-flat" type="submit"><i class="fa fa-print"></i> Cari Nota</button>
+                        </span>
+                    </div>
+                </form>
+
                 <form class="form-produk">
                     @csrf
                     <div class="row">
@@ -182,17 +191,9 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="form-group row">
-                                    <label for="metode_pembayaran" class="col-sm-4 control-label">Metode</label>
-                                    <div class="col-sm-8">
-                                        <select name="metode_pembayaran" id="metode_pembayaran" class="form-control">
-                                            @foreach (daftar_metode_pembayaran() as $value => $label)
-                                            <option value="{{ $value }}" {{ old('metode_pembayaran', $penjualan->metode_pembayaran ?? 'tunai') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                        <span class="help-block text-muted">Bank dan QRIS pada fase ini hanya untuk pencatatan manual.</span>
-                                    </div>
-                                </div>
+                                <x-cara-bayar :selected="old('metode_pembayaran', $penjualan->metode_pembayaran ?? 'tunai')" label-class="col-sm-4" field-class="col-sm-8">
+                                    <span class="help-block text-muted">Uang langsung tercatat masuk ke rekening bank yang dipilih.</span>
+                                </x-cara-bayar>
                                 <div class="form-group row" id="jatuh-tempo-group">
                                     <label for="jatuh_tempo" class="col-sm-4 control-label">Jatuh Tempo</label>
                                     <div class="col-sm-8">
@@ -244,6 +245,7 @@
 
 @includeIf('penjualan_detail.produk')
 @includeIf('penjualan_detail.member')
+@include('penjualan_detail.cari-nota')
 @endsection
 
 @push('scripts')

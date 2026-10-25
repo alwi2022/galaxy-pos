@@ -104,7 +104,7 @@
         $('#modal-form [name=_method]').val('post');
         $('#modal-form [name=tanggal_pendapatan]').val('{{ date('Y-m-d') }}');
         $('#modal-form [name=kategori_pendapatan]').val('pendapatan_lain_lain');
-        $('#modal-form [name=metode_pembayaran]').val('tunai');
+        $('#modal-form [name=metode_pembayaran]').val('tunai').trigger('change');
         $('#modal-form [name=deskripsi]').focus();
     }
 
@@ -121,7 +121,7 @@
                 $('#modal-form [name=tanggal_pendapatan]').val(response.tanggal_pendapatan);
                 $('#modal-form [name=kategori_pendapatan]').val(response.kategori_pendapatan);
                 $('#modal-form [name=deskripsi]').val(response.deskripsi);
-                $('#modal-form [name=metode_pembayaran]').val(response.metode_pembayaran);
+                $('#modal-form [name=metode_pembayaran]').val(response.metode_pembayaran).trigger('change');
                 $('#modal-form [name=nominal]').val(response.nominal);
             })
             .fail(() => {

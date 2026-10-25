@@ -72,6 +72,13 @@
             $('#service-pay-id').val(this.dataset.serviceId);
             $('#service-pay-amount').val(this.dataset.serviceAmount).attr('max',this.dataset.serviceAmount);
         });
+        root.on('click', '[data-bank-account]', function () {
+            var bank = JSON.parse(this.dataset.bankAccount);
+            $('#form-bank-account-update [name=id]').val(bank.id);
+            ['bank_name', 'account_number', 'account_holder', 'address', 'city', 'phone', 'active'].forEach(function (field) {
+                $('#bank-account-update-' + field).val(bank[field] === null ? '' : String(bank[field]));
+            });
+        });
         root.on('submit', '.business-form', function () {
             if (this.checkValidity()) $(this).find('button[type=submit]').prop('disabled',true).text('Menyimpan...');
         });

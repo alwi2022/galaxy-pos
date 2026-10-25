@@ -1,197 +1,148 @@
+@php
+    $pelanggan = $penjualan->member;
+    $diskonNominal = hitung_diskon_nominal($penjualan->total_harga, $penjualan->diskon);
+    $adaDiskonItem = $detail->contains(fn ($item) => $item->diskon > 0);
+    $caraBayar = label_cara_bayar_penjualan($penjualan);
+    $ringkasan = array_filter([
+        'Sub Total' => $penjualan->total_harga,
+        'Diskon ' . $penjualan->diskon . '%' => $diskonNominal ?: null,
+        'PPN ' . ($penjualan->ppn_persen + 0) . '%' => $penjualan->ppn_nominal ?: null,
+        'Total' => $penjualan->bayar,
+        'Dibayar' => $penjualan->dibayar,
+        'Sisa' => $penjualan->sisa > 0 ? $penjualan->sisa : null,
+    ], fn ($nilai) => $nilai !== null);
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Nota PDF</title>
+    <title>Nota {{ tambah_nol_didepan($penjualan->id_penjualan, 10) }}</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            margin: 20px;
-        }
-        .header {
-            margin-bottom: 20px;
-        }
-        .footer {
-            margin-top: 20px;
-        }
-        table {
-            width: 100%;
-        }
-        table.data {
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table.data th, table.data td {
-            border: 1px solid #999;
-            padding: 8px;
-        }
-        table.data th {
-            background-color: #f5f5f5;
-            font-weight: bold;
-        }
-        .text-center {
-            text-align: center;
-        }
-        .text-right {
-            text-align: right;
-        }
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        .company-address {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 3px;
-        }
-        .header-info td {
-            padding: 4px 8px;
-            vertical-align: top;
-        }
-        .total-section {
-            background-color: #f9f9f9;
-        }
-        .total-highlight {
-            background-color: #e8f4f8;
-            font-weight: bold;
-        }
-        .signature-section {
-            margin-top: 40px;
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-        }
+        @page { margin: 18pt 20pt; }
+        body { font-family: Courier, monospace; font-size: 9pt; color: #000; margin: 0; }
+        table { width: 569pt; border-collapse: collapse; }
+        td, th { padding: 2pt 4pt; vertical-align: top; }
+        .kop-nama { font-size: 15pt; font-weight: bold; letter-spacing: 1pt; }
+        .kop-alamat { font-size: 8pt; }
+        .judul { font-size: 11pt; font-weight: bold; letter-spacing: 2pt; text-align: center; padding: 4pt 0; }
+        .info td { padding: 0 4pt; }
+        .info .label { width: 70pt; white-space: nowrap; }
+        .info .nilai { width: 215pt; }
+        .info .lebar { width: 214pt; }
+        .ttd { width: 100%; }
+        .customer { font-size: 11pt; font-weight: bold; }
+        .barang { margin-top: 4pt; border: 1pt solid #000; }
+        .barang th { border: 1pt solid #000; font-weight: bold; text-align: center; }
+        .barang td { border-left: 1pt solid #000; border-right: 1pt solid #000; }
+        .barang tbody tr:last-child td { padding-bottom: 6pt; }
+        .ringkas { margin-top: -1pt; page-break-inside: avoid; }
+        .ringkas td { border: 1pt solid #000; }
+        .terbilang { font-weight: bold; vertical-align: middle; }
+        .r { text-align: right; }
+        .c { text-align: center; }
+        .kotak { border: 1pt solid #000; padding: 4pt 6pt; }
+        .ttd td { text-align: center; padding-top: 2pt; }
+        .garis { border-top: 1pt solid #000; display: inline-block; min-width: 110pt; padding-top: 2pt; }
     </style>
 </head>
 <body>
-
-    {{-- Header --}}
-    <table class="header">
+    <table>
         <tr>
-            <td width="60%" style="vertical-align: top;">
-                <div class="company-name">{{ strtoupper($setting->nama_perusahaan) }}</div>
-                <div class="company-address">{{ $setting->alamat }}</div>
-                @if(isset($setting->telepon))
-                    <div class="company-address">Telp: {{ $setting->telepon }}</div>
-                @endif
-                @if(isset($setting->email))
-                    <div class="company-address">Email: {{ $setting->email }}</div>
+            <td style="padding:0">
+                <div class="kop-nama">{{ strtoupper($setting->nama_perusahaan) }}</div>
+                <div class="kop-alamat">{{ strtoupper($setting->alamat) }}</div>
+                @if (filled($setting->telepon))<div class="kop-alamat">{{ $setting->telepon }}</div>@endif
+            </td>
+        </tr>
+    </table>
+    <div class="judul">NOTA PENJUALAN</div>
+    <table class="info">
+        <tr>
+            <td class="label">No.Nota</td><td class="nilai">: {{ tambah_nol_didepan($penjualan->id_penjualan, 10) }}</td>
+            <td class="label">Customer</td><td class="customer lebar">: {{ strtoupper($pelanggan->nama ?? 'UMUM') }}</td>
+        </tr>
+        <tr>
+            <td class="label">Tanggal</td><td class="nilai">: {{ \Carbon\Carbon::parse($tanggal)->format('d/m/Y') }}</td>
+            <td class="label">Telp</td><td>: {{ $pelanggan->telepon ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Cara Bayar</td><td class="nilai">: {{ $caraBayar }}</td>
+            <td class="label">Alamat</td><td>: {{ $pelanggan->alamat ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Kasir</td><td class="nilai">: {{ strtoupper($penjualan->user->name ?? '-') }}</td>
+            @if ($penjualan->sisa > 0 && $penjualan->jatuh_tempo)
+            <td class="label">Jatuh Tempo</td><td>: {{ $penjualan->jatuh_tempo->format('d/m/Y') }}</td>
+            @else
+            <td></td><td></td>
+            @endif
+        </tr>
+    </table>
+
+    <table class="barang">
+        <thead>
+            <tr>
+                <th style="width:26pt">No.</th>
+                <th style="width:{{ $adaDiskonItem ? 236 : 285 }}pt">NAMA BARANG</th>
+                <th style="width:40pt">QTY</th>
+                <th style="width:80pt">HARGA</th>
+                @if ($adaDiskonItem)<th style="width:40pt">DISC</th>@endif
+                <th style="width:90pt">JUMLAH</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($detail as $item)
+            <tr>
+                <td class="r">{{ $loop->iteration }}</td>
+                <td>{{ $item->produk->nama_produk ?? '-' }}</td>
+                <td class="r">{{ format_uang($item->jumlah) }}</td>
+                <td class="r">{{ format_uang($item->harga_jual) }}</td>
+                @if ($adaDiskonItem)<td class="r">{{ $item->diskon > 0 ? $item->diskon . '%' : '-' }}</td>@endif
+                <td class="r">{{ format_uang($item->subtotal) }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    {{-- Ringkasan dipisah agar tidak terpotong ke halaman berikutnya --}}
+    <table class="ringkas">
+        @foreach ($ringkasan as $label => $nilai)
+        <tr>
+            @if ($loop->first)
+            <td style="width:{{ $adaDiskonItem ? 270 : 319 }}pt" rowspan="{{ count($ringkasan) }}" class="terbilang"># {{ strtoupper(trim(terbilang($penjualan->bayar))) }} RUPIAH #</td>
+            @endif
+            <td style="width:{{ $adaDiskonItem ? 176 : 128 }}pt; @if (in_array($label, ['Total', 'Sisa'])) font-weight:bold @endif">{{ $label }}@if ($label === 'Sub Total') ({{ format_uang($detail->sum('jumlah')) }} item)@endif</td>
+            <td style="width:90pt; @if (in_array($label, ['Total', 'Sisa'])) font-weight:bold @endif" class="r">{{ format_uang($nilai) }}</td>
+        </tr>
+        @endforeach
+    </table>
+
+    <table style="margin-top:4pt">
+        <tr><td></td><td class="r" style="width:200pt">{{ tanggal_indonesia($tanggal, false) }}</td></tr>
+    </table>
+    <table style="margin-top:2pt">
+        <tr>
+            <td style="width:46%; padding:0">
+                <div class="kotak c">Barang yang sudah dibeli tidak bisa<br>ditukar / dikembalikan</div>
+                @if ($rekening->isNotEmpty())
+                <div class="kotak" style="margin-top:4pt">
+                    Pembayaran sisa tagihan via transfer:
+                    @foreach ($rekening as $bank)
+                    <br>{{ $bank->bank_name }} No.Rek {{ $bank->account_number }}@if (filled($bank->account_holder)) a/n {{ $bank->account_holder }}@endif
+                    @endforeach
+                </div>
                 @endif
             </td>
-            <td width="40%" style="vertical-align: top;">
-                <table class="header-info">
+            <td style="padding:0">
+                <table class="ttd">
+                    <tr><td>Kasir</td><td>Penerima</td></tr>
+                    <tr><td style="height:42pt"></td><td></td></tr>
                     <tr>
-                        <td><strong>Tanggal</strong></td>
-                        <td>: {{ tanggal_indonesia(date('Y-m-d')) }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>No. Nota</strong></td>
-                        <td>: {{ tambah_nol_didepan($penjualan->id_penjualan, 10) }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Kasir</strong></td>
-                        <td>: {{ auth()->user()->name }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Kode Member</strong></td>
-                        <td>: {{ $penjualan->member->kode_member ?? '-' }}</td>
+                        <td><span class="garis">{{ $penjualan->user->name ?? '' }}</span></td>
+                        <td><span class="garis">{{ $pelanggan->nama ?? '' }}</span></td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
-
-    {{-- Tabel Transaksi --}}
-    <table class="data">
-        <thead>
-            <tr>
-                <th width="5%">No</th>
-                <th width="15%">Kode</th>
-                <th width="35%">Nama Produk</th>
-                <th width="12%">Harga Satuan</th>
-                <th width="8%">Jumlah</th>
-                <th width="10%">Diskon</th>
-                <th width="15%">Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($detail as $key => $item)
-                <tr>
-                    <td class="text-center">{{ $key + 1 }}</td>
-                    <td>{{ $item->produk->kode_produk }}</td>
-                    <td>{{ $item->produk->nama_produk }}</td>
-                    <td class="text-right">{{ format_uang($item->harga_jual) }}</td>
-                    <td class="text-center">{{ $item->jumlah }}</td>
-                    <td class="text-right">{{ $item->diskon }}%</td>
-                    <td class="text-right">{{ format_uang($item->subtotal) }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-        <tfoot>
-            <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>Total Harga</strong></td>
-                <td class="text-right"><strong>{{ format_uang($penjualan->total_harga) }}</strong></td>
-            </tr>
-            <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>Diskon</strong></td>
-                <td class="text-right"><strong>{{ $penjualan->diskon }}% / {{ format_uang(hitung_diskon_nominal($penjualan->total_harga, $penjualan->diskon)) }}</strong></td>
-            </tr>
-            <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>DPP</strong></td>
-                <td class="text-right"><strong>{{ format_uang($penjualan->total_harga - hitung_diskon_nominal($penjualan->total_harga, $penjualan->diskon)) }}</strong></td>
-            </tr>
-            <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>PPN</strong></td>
-                <td class="text-right"><strong>{{ $penjualan->ppn_persen ?? 0 }}% / {{ format_uang($penjualan->ppn_nominal ?? 0) }}</strong></td>
-            </tr>
-            <tr class="total-highlight">
-                <td colspan="6" class="text-right"><strong>Tagihan</strong></td>
-                <td class="text-right"><strong>{{ format_uang($penjualan->bayar) }}</strong></td>
-            </tr>
-            <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>Terbayar</strong></td>
-                <td class="text-right"><strong>{{ format_uang($penjualan->dibayar) }}</strong></td>
-            </tr>
-            <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>Sisa</strong></td>
-                <td class="text-right"><strong>{{ format_uang($penjualan->sisa) }}</strong></td>
-            </tr>
-            <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>Metode</strong></td>
-                <td class="text-right"><strong>{{ label_metode_pembayaran($penjualan->metode_pembayaran) }}</strong></td>
-            </tr>
-            <tr class="total-section">
-                <td colspan="6" class="text-right"><strong>Status</strong></td>
-                <td class="text-right"><strong>{{ label_status_pembayaran($penjualan->status_pembayaran) }}</strong></td>
-            </tr>
-        </tfoot>
-    </table>
-
-    {{-- Footer --}}
-    <table class="footer signature-section">
-        <tr>
-            <td width="60%" style="vertical-align: top;">
-                <div style="margin-bottom: 10px;">
-                    <strong>Terima kasih telah berbelanja dan sampai jumpa</strong>
-                </div>
-                <div style="font-size: 12px; color: #666;">
-                    Barang yang sudah dibeli tidak dapat dikembalikan<br>
-                    kecuali ada kesalahan dari pihak toko.
-                </div>
-            </td>
-            <td width="40%" class="text-center" style="vertical-align: top;">
-                <div style="margin-bottom: 60px;">
-                    <strong>Hormat Kami</strong>
-                </div>
-                <div style="border-top: 1px solid #333; padding-top: 5px; display: inline-block; min-width: 120px;">
-                    <strong>{{ auth()->user()->name }}</strong><br>
-                    <small>Kasir</small>
-                </div>
-            </td>
-        </tr>
-    </table>
-
 </body>
 </html>

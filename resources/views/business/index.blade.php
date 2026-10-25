@@ -3,7 +3,7 @@
     $meta = config('business.' . $module);
     $financialTitles = ['profit'=>'Laporan Laba Rugi','balance'=>'Neraca','cash'=>'Laporan Arus Kas','tax'=>'Laporan PPN'];
     $pageTitle = $financialReport ? $financialTitles[$financialReport] : $meta['title'];
-    $sectionTitle = $financialReport ? 'Laporan' : (in_array($module,['stok','retur']) ? 'Persediaan' : ($module === 'piutang-servis' ? 'Servis' : (in_array($module,['aset','akrual','rekonsiliasi','pajak','akuntansi']) ? 'Akuntansi' : 'Keuangan')));
+    $sectionTitle = $financialReport ? 'Laporan' : ($module === 'rekening-bank' ? 'Master' : (in_array($module,['stok','retur']) ? 'Persediaan' : ($module === 'piutang-servis' ? 'Servis' : (in_array($module,['aset','akrual','rekonsiliasi','pajak','akuntansi']) ? 'Akuntansi' : 'Keuangan'))));
     $cashOptions = $accounts->where('cash_account',true)->mapWithKeys(fn($a) => [$a->code => $a->name])->all();
     $productOptions = $products->mapWithKeys(fn($p) => [$p->id_produk => $p->nama_produk . ' (stok ' . $p->stok . ')'])->all();
     $dateField = ['date','Tanggal','date'];
@@ -42,7 +42,7 @@
 </div>
 @endsection
 @push('scripts')
-<script src="{{ asset('js/galaxy-ui.js') }}?v=11"></script>
+<script src="{{ asset('js/galaxy-ui.js') }}?v=13"></script>
 @if ($errors->any() && old('_action'))
 <script>$(function(){
     var action = @json(old('_action')), id = @json(old('id'));

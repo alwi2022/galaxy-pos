@@ -30,7 +30,8 @@ class PenjualanController extends Controller
 
     public function data()
     {
-        $penjualan = Penjualan::with(['member', 'user'])
+        $notaRoute = (int) (Setting::first()->tipe_nota ?? 1) === 1 ? 'penjualan.nota_kecil' : 'penjualan.nota_besar';
+        $penjualan =Penjualan::with(['member', 'user'])
             ->where('id_cabang', auth()->user()->id_cabang)
             ->where('total_item', '>', 0)
             ->whereNull('cancelled_at')
@@ -91,10 +92,11 @@ class PenjualanController extends Controller
             ->editColumn('kasir', function ($penjualan) {
                 return $penjualan->user->name ?? '';
             })
-            ->addColumn('aksi', function ($penjualan) {
+            ->addColumn('aksi', function ($penjualan) use ($notaRoute) {
                 return '
                 <div class="btn-group">
                     <button onclick="showDetail(`' . route('penjualan.show', $penjualan->id_penjualan) . '`)" class="btn btn-xs btn-info btn-flat"><i class="fa fa-eye"></i></button>
+                    <a href="' . route($notaRoute, $penjualan->id_penjualan) . '" target="_blank" rel="noopener" class="btn btn-xs btn-default btn-flat" title="Cetak ulang nota"><i class="fa fa-print"></i></a>
                     '. ($penjualan->sisa > 0 ? '<a href="' . route('pembayaran.index', ['tab' => 'piutang']) . '" class="btn btn-xs btn-warning btn-flat"><i class="fa fa-money"></i></a>' : '') .'
                     <button onclick="deleteData(`' . route('penjualan.destroy', $penjualan->id_penjualan) . '`)" class="btn btn-xs btn-danger btn-flat"><i class="fa fa-trash"></i></button>
                 </div>
@@ -140,7 +142,7 @@ class PenjualanController extends Controller
             'diskon' => 'nullable|numeric|min:0|max:100',
             'diterima' => 'nullable|integer|min:0',
             'skema_pembayaran' => 'required|in:langsung,kredit',
-            'metode_pembayaran' => 'required|in:tunai,transfer_bank,qris',
+            'metode_pembayaran' => ['required', \Illuminate\Validation\Rule::in(array_keys(daftar_metode_pembayaran()))],
             'jatuh_tempo' => 'nullable|required_if:skema_pembayaran,kredit|date',
         ]);
 
@@ -263,33 +265,69 @@ class PenjualanController extends Controller
         return view('penjualan.selesai', compact('setting'));
     }
 
-    public function notaKecil()
+    public function notaKecil($id = null)
     {
-        $setting = Setting::first();
-        $penjualan = Penjualan::find(session('id_penjualan_selesai', session('id_penjualan')));
-        if (!$penjualan) {
-            abort(404);
-        }
-        $detail = PenjualanDetail::with('produk')
-            ->where('id_penjualan', $penjualan->id_penjualan)
-            ->get();
-
-        return view('penjualan.nota_kecil', compact('setting', 'penjualan', 'detail'));
+        return view('penjualan.nota_kecil', $this->notaData($id));
     }
 
-    public function notaBesar()
+    public function notaBesar($id = null)
     {
-        $setting = Setting::first();
-        $penjualan = Penjualan::find(session('id_penjualan_selesai', session('id_penjualan')));
+        $data = $this->notaData($id);
+        $pdf = PDF::loadView('penjualan.nota_besar', $data);
+        $pdf->setPaper([0, 0, 609, 440], 'portrait');
+        return $pdf->stream('Nota-' . tambah_nol_didepan($data['penjualan']->id_penjualan, 10) . '.pdf');
+    }
+
+    public function cariNota(Request $request)
+    {
+        $request->validate(['nomor' => 'required|string|max:20']);
+        $id = (int) ltrim(preg_replace('/\D/', '', $request->nomor), '0');
+        $penjualan = Penjualan::with(['member', 'user'])
+            ->where('id_cabang', auth()->user()->id_cabang)
+            ->whereNotNull('posted_at')
+            ->where('total_item', '>', 0)
+            ->find($id);
+        if (!$penjualan) {
+            return response()->json(['message' => 'Nota ' . $request->nomor . ' tidak ditemukan di cabang ini.'], 404);
+        }
+        $detail = PenjualanDetail::with('produk')->where('id_penjualan', $penjualan->id_penjualan)->get();
+        $notaRoute = (int) (Setting::first()->tipe_nota ?? 1) === 1 ? 'penjualan.nota_kecil' : 'penjualan.nota_besar';
+
+        return response()->json([
+            'nomor' => tambah_nol_didepan($penjualan->id_penjualan, 10),
+            'tanggal' => \Carbon\Carbon::parse($penjualan->posted_at)->format('d/m/Y'),
+            'jatuh_tempo' => $penjualan->sisa > 0 && $penjualan->jatuh_tempo ? $penjualan->jatuh_tempo->format('d/m/Y') : null,
+            'customer' => $penjualan->member->nama ?? 'UMUM',
+            'alamat' => $penjualan->member->alamat ?? '-',
+            'telepon' => $penjualan->member->telepon ?? '-',
+            'kasir' => $penjualan->user->name ?? '-',
+            'cara_bayar' => label_cara_bayar_penjualan($penjualan),
+            'status' => label_status_pembayaran($penjualan->status_pembayaran),
+            'items' => $detail->map(fn ($item) => ['nama' => $item->produk->nama_produk ?? '-', 'jumlah' => format_uang($item->jumlah), 'harga' => format_uang($item->harga_jual), 'diskon' => $item->diskon, 'subtotal' => format_uang($item->subtotal)]),
+            'total' => format_uang($penjualan->bayar),
+            'dibayar' => format_uang($penjualan->dibayar),
+            'sisa' => format_uang($penjualan->sisa),
+            'retur' => $penjualan->returned_total > 0 ? format_uang($penjualan->returned_total) : null,
+            'cetak' => route($notaRoute, $penjualan->id_penjualan),
+            'jenis_nota' => $notaRoute === 'penjualan.nota_kecil' ? 'kecil' : 'besar',
+        ]);
+    }
+
+    private function notaData($id): array
+    {
+        $penjualan = Penjualan::with(['member', 'user'])->find($id ?? session('id_penjualan_selesai', session('id_penjualan')));
         if (!$penjualan) {
             abort(404);
         }
         $detail = PenjualanDetail::with('produk')
             ->where('id_penjualan', $penjualan->id_penjualan)
             ->get();
+        $tanggal = \Carbon\Carbon::parse($penjualan->posted_at ?? $penjualan->created_at ?? now())->toDateString();
+        // Rekening tujuan transfer hanya dicetak bila masih ada sisa tagihan.
+        $rekening = $penjualan->sisa > 0
+            ? app(\App\Services\PaymentMethodService::class)->all((int) $penjualan->id_cabang)->where('type', 'bank')->where('active', true)->filter(fn ($bank) => filled($bank->account_number))->values()
+            : collect();
 
-        $pdf = PDF::loadView('penjualan.nota_besar', compact('setting', 'penjualan', 'detail'));
-        $pdf->setPaper(0, 0, 609, 440, 'potrait');
-        return $pdf->stream('Transaksi-' . date('Y-m-d-his') . '.pdf');
+        return ['setting' => Setting::first()] + compact('penjualan', 'detail', 'tanggal', 'rekening');
     }
 }

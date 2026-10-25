@@ -50,7 +50,7 @@ class BusinessTransactionService
         if (! $header || ! $header->posted_at || $header->cancelled_at) {
             app(LedgerService::class)->fail('Pembayaran hanya untuk transaksi final yang aktif.');
         }
-        $cash = app(LedgerService::class)->cashCode($payment->metode_pembayaran);
+        $cash = app(LedgerService::class)->cashCode($payment->metode_pembayaran, (int) $payment->id_cabang);
         $amount = (int) $payment->nominal;
         $sumPaid = (int) DB::table($type . '_pembayaran')->where('id_' . $type, $header->{'id_' . $type})->sum('nominal');
         if ($amount < 1 || $sumPaid - $header->refunded_total > $header->bayar - $header->returned_total) {
@@ -94,7 +94,7 @@ class BusinessTransactionService
             $unitCost = $sale ? (int) $detail->unit_cost : (int) round($allocation['dpp'] / $detail->jumlah);
             $id = DB::table('stock_returns')->insertGetId(['id_cabang' => $branch, 'type' => $type, 'transaction_id' => $header->$key, 'detail_id' => $data['detail_id'], 'id_produk' => $detail->id_produk, 'date' => $data['date'], 'quantity' => $quantity, 'restock' => $sale ? (bool) ($data['restock'] ?? false) : false, 'amount' => $amount, 'tax' => $tax, 'refund' => $refund, 'unit_cost' => $unitCost, 'reason' => $data['reason'], 'id_user' => auth()->id(), 'created_at' => now(), 'updated_at' => now()]);
             $ref = 'RET-' . $id;
-            $cash = $ledger->cashCode($data['method']);
+            $cash = $ledger->cashCode($data['method'], $branch);
             $cost = $sale ? (int) round($detail->cost_total * ($previous + $quantity) / $detail->jumlah) - (int) round($detail->cost_total * $previous / $detail->jumlah) : $unitCost * $quantity;
             if ($sale) {
                 $lines = [['4101', $amount - $tax, 0], ['2201', $tax, 0], ['1201', 0, $offset], [$cash, 0, $refund]];

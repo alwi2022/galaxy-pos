@@ -15,6 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->app->singleton(\App\Services\PaymentMethodService::class);
         view()->composer('layouts.master', function ($view) {
             $view->with('setting', Setting::first());
         });

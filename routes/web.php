@@ -105,6 +105,9 @@ Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite:
         Route::get('/transaksi/selesai', [PenjualanController::class, 'selesai'])->name('transaksi.selesai');
         Route::get('/transaksi/nota-kecil', [PenjualanController::class, 'notaKecil'])->name('transaksi.nota_kecil');
         Route::get('/transaksi/nota-besar', [PenjualanController::class, 'notaBesar'])->name('transaksi.nota_besar');
+        Route::get('/transaksi/cari-nota', [PenjualanController::class, 'cariNota'])->name('transaksi.cari_nota');
+        Route::get('/penjualan/{id}/nota-kecil', [PenjualanController::class, 'notaKecil'])->name('penjualan.nota_kecil')->middleware('cabang');
+        Route::get('/penjualan/{id}/nota-besar', [PenjualanController::class, 'notaBesar'])->name('penjualan.nota_besar')->middleware('cabang');
 
         Route::get('/transaksi/{id}/data', [PenjualanDetailController::class, 'data'])->name('transaksi.data');
         Route::get('/transaksi/loadform/{diskon}/{total}/{diterima}', [PenjualanDetailController::class, 'loadForm'])->name('transaksi.load_form');

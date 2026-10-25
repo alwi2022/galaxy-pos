@@ -7,6 +7,7 @@
             ['title'=>'Produk','icon'=>'cubes','route'=>'produk.index','active'=>request()->routeIs('produk.*')],
             ['title'=>'Member','icon'=>'id-card','route'=>'member.index','active'=>request()->routeIs('member.*')],
             ['title'=>'Supplier','icon'=>'truck','route'=>'supplier.index','active'=>request()->routeIs('supplier.*')],
+            ['title'=>'Rekening Bank','icon'=>'bank','module'=>'rekening-bank'],
         ]],
         ['title'=>'Transaksi','icon'=>'shopping-cart','levels'=>[1,2],'items'=>[
             ['title'=>'Transaksi Aktif','icon'=>'cart-arrow-down','route'=>'transaksi.index','active'=>request()->routeIs('transaksi.index','transaksi_detail.*')],

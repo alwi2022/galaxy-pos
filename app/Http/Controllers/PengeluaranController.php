@@ -148,7 +148,7 @@ class PengeluaranController extends Controller
             'kategori_pengeluaran' => 'required|in:' . implode(',', array_keys(daftar_kategori_pengeluaran())),
             'deskripsi' => 'required|string|max:500',
             'nominal' => 'required|integer|min:1',
-            'metode_pembayaran' => 'required|in:tunai,transfer_bank,qris',
+            'metode_pembayaran' => ['required', \Illuminate\Validation\Rule::in(array_keys(daftar_metode_pembayaran()))],
         ]);
     }
 }

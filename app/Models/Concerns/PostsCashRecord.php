@@ -39,7 +39,7 @@ trait PostsCashRecord
             $result = parent::save($options);
             $entry = null;
             if ($amount > 0 && (! $service || in_array($this->status, ['selesai', 'diambil'], true))) {
-                $cash = $ledger->cashCode($this->metode_pembayaran ?? 'tunai');
+                $cash = $ledger->cashCode($this->metode_pembayaran ?? 'tunai', (int) $this->id_cabang);
                 $code = $service ? '4102' : '4103';
                 $lines = $expense ? [['6101', $amount, 0], [$cash, 0, $amount]] : [[$cash, $amount, 0], [$code, 0, $amount]];
                 $entry = $ledger->post((int) $this->id_cabang, $date, strtoupper($this->getTable()) . '-' . $this->getKey() . '-' . Str::uuid(), $service ? 'Servis ' . $this->kode_servis : $this->deskripsi, $lines);

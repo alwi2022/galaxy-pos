@@ -176,7 +176,7 @@ class PembayaranController extends Controller
     {
         $request->validate([
             'nominal' => 'required|integer|min:1',
-            'metode_pembayaran' => 'required|in:tunai,transfer_bank',
+            'metode_pembayaran' => ['required', \Illuminate\Validation\Rule::in(array_keys(collect(daftar_metode_pembayaran())->except('qris')->all()))],
             'keterangan' => 'nullable|string|max:500',
         ]);
 
@@ -209,7 +209,7 @@ class PembayaranController extends Controller
     {
         $request->validate([
             'nominal' => 'required|integer|min:1',
-            'metode_pembayaran' => 'required|in:tunai,transfer_bank',
+            'metode_pembayaran' => ['required', \Illuminate\Validation\Rule::in(array_keys(collect(daftar_metode_pembayaran())->except('qris')->all()))],
             'keterangan' => 'nullable|string|max:500',
         ]);
 

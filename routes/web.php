@@ -37,6 +37,8 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 Route::get('/servis/track/{kode}', [ServisController::class, 'track'])->name('servis.track');
+Route::get('/desktop/setup', [\App\Http\Controllers\DesktopSetupController::class, 'create'])->name('desktop.setup');
+Route::post('/desktop/setup', [\App\Http\Controllers\DesktopSetupController::class, 'store'])->middleware('throttle:10,1')->name('desktop.setup.store');
 Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite::class]], function () {
     Route::group(['middleware' => 'level:1'], function () {
         Route::get('/usaha/export/jurnal', [\App\Http\Controllers\BusinessController::class, 'export'])->name('business.export');

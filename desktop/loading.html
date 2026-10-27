@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
+    <title>Galaxy POS</title>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: grid;
+            place-content: center;
+            background: #ecf0f5;
+            color: #444;
+            font: 14px/1.5 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+        }
+
+        main {
+            padding: 32px;
+            width: 320px;
+            max-width: 90vw;
+        }
+
+        .logo {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 18px;
+            display: block;
+        }
+
+        h1 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            font-weight: 600;
+            color: #3c8dbc;
+        }
+
+        h1 b {
+            color: #367fa9;
+        }
+
+        p {
+            margin: 0 0 24px;
+            color: #777;
+        }
+
+        .spinner {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #d2d6de;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .spinner::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 40%;
+            border-radius: 3px;
+            background: #3c8dbc;
+            animation: indeterminate 1.4s ease-in-out infinite;
+        }
+
+        @keyframes indeterminate {
+            0%   { left: -40%; }
+            100% { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <img class="logo" alt="Galaxy POS"
+            src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48cmVjdCB4PSI2IiB5PSIxMiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjM0IiByeD0iNCIgZmlsbD0iIzNjOGRiYyIvPjxyZWN0IHg9IjEyIiB5PSIxOCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjIyIiByeD0iMiIgZmlsbD0iI2VjZjBmNSIvPjxyZWN0IHg9IjIwIiB5PSI1MCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjQiIHJ4PSIyIiBmaWxsPSIjMzY3ZmE5Ii8+PGNpcmNsZSBjeD0iMzIiIGN5PSIyOSIgcj0iNyIgZmlsbD0iIzNjOGRiYyIvPjwvc3ZnPg==">
+        <h1><b>Galaxy</b> POS</h1>
+        <p>Menyiapkan data toko. Mohon tunggu...</p>
+        <div class="spinner" role="progressbar" aria-label="Menyiapkan aplikasi"></div>
+    </main>
+</body>
+</html>

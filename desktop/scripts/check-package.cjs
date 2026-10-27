@@ -1,0 +1,16 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const assert = require('node:assert/strict');
+const asar = require('@electron/asar');
+const desktop = path.resolve(__dirname,'..');
+const root = path.dirname(desktop);
+const resources = path.join(desktop,'dist/win-unpacked/resources');
+const digest = value => crypto.createHash('sha256').update(value).digest('hex');
+for(const file of ['main.cjs','runtime.cjs','loading.html']) assert.equal(digest(asar.extractFile(path.join(resources,'app.asar'),file)),digest(fs.readFileSync(path.join(desktop,file))),file+' tidak sama dengan source.');
+for(const file of ['bootstrap/app.php','app/Console/Commands/DesktopInitialize.php','app/Services/DesktopBackupService.php','resources/views/layouts/master.blade.php','resources/views/layouts/auth.blade.php']) assert.equal(digest(fs.readFileSync(path.join(resources,'backend',file))),digest(fs.readFileSync(path.join(root,file))),file+' tidak sama dengan source.');
+for(const privateFile of ['.env','bootstrap/cache/config.php','database/database.sqlite','storage/certs/aiven-ca.pem']) assert.equal(fs.existsSync(path.join(resources,'backend',privateFile)),false,'File pribadi ikut dipaketkan: '+privateFile);
+const nativeSmoke = JSON.parse(fs.readFileSync(path.join(desktop,'.test-data/packaged-20261027/smoke-result.json')));
+assert.equal(nativeSmoke.result,'PASS');
+assert.equal(nativeSmoke.packaged,true);
+console.log('PASS: executable memakai source terbaru, pengujian native berhasil, dan konfigurasi cloud tidak ada di paket.');

@@ -18,6 +18,13 @@ $app = new Illuminate\Foundation\Application(
     $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 
+if ($desktopData = getenv('GALAXY_DESKTOP_DATA')) {
+    $app->addAbsoluteCachePathPrefix($desktopData);
+    $app->useEnvironmentPath($desktopData);
+    $app->useStoragePath($desktopData . '/storage');
+    $app->instance('path.public', $desktopData . '/public');
+}
+
 /*
  * |--------------------------------------------------------------------------
  * | Bind Important Interfaces

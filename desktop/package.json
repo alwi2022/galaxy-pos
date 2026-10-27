@@ -1,0 +1,39 @@
+{
+  "name": "galaxy-pos-desktop",
+  "productName": "Galaxy POS",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Galaxy POS untuk satu komputer Windows, dengan database lokal.",
+  "author": "Galaxy POS",
+  "main": "main.cjs",
+  "scripts": {
+    "prepare:app": "node scripts/prepare.cjs",
+    "start": "npm run prepare:app && electron .",
+    "dist": "npm run prepare:app && electron-builder --win nsis --x64",
+    "test": "node --test test/*.test.cjs"
+  },
+  "devDependencies": {
+    "electron": "45.0.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "id.galaxypos.desktop",
+    "asar": true,
+    "compression": "store",
+    "directories": {"output": "dist", "buildResources": "build"},
+    "files": ["main.cjs", "runtime.cjs", "loading.html", "package.json"],
+    "extraResources": [{"from": ".staging/backend", "to": "backend"}, {"from": ".staging/php", "to": "php"}],
+    "win": {"target": "nsis", "icon": "build/icon.ico", "artifactName": "Galaxy-POS-Setup-${version}-x64.exe"},
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "differentialPackage": false,
+      "useZip": true,
+      "include": "build/installer.nsh"
+    }
+  }
+}

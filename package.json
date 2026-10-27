@@ -1,6 +1,9 @@
 {
     "private": true,
     "scripts": {
+        "desktop:install": "npm --prefix desktop install",
+        "desktop:dev": "npm --prefix desktop start",
+        "desktop:build": "npm --prefix desktop run dist",
         "dev": "npm run development",
         "development": "mix",
         "watch": "mix watch",

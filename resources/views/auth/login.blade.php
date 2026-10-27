@@ -42,140 +42,42 @@
         align-items: center;
         padding: 60px 40px;
     }
-    
-    /* Main title */
-    .login-title {
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 8px;
-        text-align: center;
-        color: #333;
-        line-height: 1.2;
+
+    /* Login box reusing AdminLTE login-box width */
+    .login-right .login-box {
+        width: 360px;
+        max-width: 100%;
+        margin: 0;
     }
-    
-    .login-subtitle {
-        font-weight: 400;
-        color: #666;
-    }
-    
-    .login-email {
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 40px;
+
+    /* Login logo (AdminLTE style) */
+    .login-right .login-logo {
+        margin-bottom: 25px;
+        font-size: 30px;
         text-align: center;
     }
-    
-    /* Form container */
-    .login-form {
-        width: 100%;
-        max-width: 380px;
-    }
-    
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 8px;
-        color: #333;
-        text-align: left;
-    }
-    
-    .form-control {
-        width: 100%;
-        padding: 12px 16px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 14px;
-        background-color: #fff;
-        color: #333;
-        box-sizing: border-box;
-        transition: all 0.3s ease;
-    }
-    
-    .form-control:focus {
-        outline: none;
-        border-color: #605CA8;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-    }
-    
-    .form-control::placeholder {
-        color: #aaa;
-    }
-    
-    /* Clear link */
-    .clear-link {
-        text-align: right;
-        margin: 20px 0;
-    }
-    
-    .clear-link a {
+
+    .login-right .login-logo b {
         color: #605CA8;
-        text-decoration: none;
-        font-size: 14px;
-        transition: color 0.3s ease;
     }
-    
-    .clear-link a:hover {
-        color: #7c3aed;
-        text-decoration: underline;
-    }
-    
-    /* Login button */
-    .btn-login {
-        width: 100%;
-        background: linear-gradient(135deg, #605CA8 0%, #7c3aed 100%);
-        color: white;
-        padding: 14px;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin-bottom: 30px;
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-    }
-    
-    .btn-login:hover {
-        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
-    }
-    
-    .btn-login:active {
-        transform: translateY(0);
-    }
-    
-    /* Website link */
-    .website-link {
-        text-align: center;
+
+    .login-right .login-box-msg {
         color: #666;
-        font-size: 14px;
     }
-    
-    /* Error styling */
-    .has-error .form-control {
-        border-color: #ef4444;
+
+    /* Tint the AdminLTE primary button to match the illustration */
+    .login-right .btn-primary {
+        background-color: #605CA8;
+        border-color: #564fa0;
     }
-    
-    .help-block {
-        color: #ef4444;
-        font-size: 12px;
-        margin-top: 5px;
+
+    .login-right .btn-primary:hover,
+    .login-right .btn-primary:focus,
+    .login-right .btn-primary:active {
+        background-color: #514c90;
+        border-color: #464080;
     }
-    
-    /* Hide original Bootstrap elements */
-    .form-control-feedback,
-    .checkbox {
-        display: none;
-    }
-    
+
     /* Responsive design */
     @media (max-width: 1024px) {
         .login-left {
@@ -207,10 +109,6 @@
             flex: 1;
             padding: 40px 30px;
         }
-        
-        .login-title {
-            font-size: 24px;
-        }
     }
     
     @media (max-width: 480px) {
@@ -227,14 +125,6 @@
         .login-right {
             padding: 30px 20px;
         }
-        
-        .login-title {
-            font-size: 22px;
-        }
-        
-        .login-form {
-            max-width: 100%;
-        }
     }
 </style>
 
@@ -246,114 +136,53 @@
 
     <!-- Right side - Login Form -->
     <div class="login-right">
-        <h1 class="login-title">
-            POS SERVIS <span class="login-subtitle">Galaxy Computer</span>
-        </h1>
-        
-       
-
-        <form action="{{ route('login') }}" method="post" class="form-login login-form">
-            @csrf
-            
-            <div class="form-group @error('email') has-error @enderror">
-                <label for="email" class="form-label">Email</label>
-                <input 
-                    type="email" 
-                    id="email"
-                    name="email" 
-                    class="form-control" 
-                    placeholder="Enter your email" 
-                    required 
-                    value="{{ old('email') }}" 
-                    autofocus
-                >
-                @error('email')
-                    <span class="help-block">{{ $message }}</span>
-                @enderror
+        <div class="login-box">
+            <div class="login-logo">
+                @if(!empty($setting->nama_perusahaan))
+                    {{ $setting->nama_perusahaan }}
+                @else
+                    <b>Galaxy</b> Computer
+                @endif
             </div>
 
-            <div class="form-group @error('password') has-error @enderror">
-                <label for="password" class="form-label">Password</label>
-                <input 
-                    type="password" 
-                    id="password"
-                    name="password" 
-                    class="form-control" 
-                    placeholder="Enter your password" 
-                    required
-                >
-                @error('password')
-                    <span class="help-block">{{ $message }}</span>
-                @enderror
-            </div>
+            <div class="login-box-body">
+                <p class="login-box-msg">Silakan login untuk memulai sesi</p>
 
-            <div class="clear-link">
-                <a href="#" onclick="clearForm(); return false;">Clear</a>
-            </div>
+                <form action="{{ route('login') }}" method="post" class="form-login">
+                    @csrf
 
-            <button type="submit" class="btn-login">LOGIN</button>
+                    <div class="form-group has-feedback @error('email') has-error @enderror">
+                        <input type="email" name="email" class="form-control" placeholder="Email"
+                            value="{{ old('email') }}" required autofocus>
+                        <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                        @error('email')
+                            <span class="help-block">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-            <div class="website-link">
-                imambahrialwi21@gmail.com
-            </div>
+                    <div class="form-group has-feedback @error('password') has-error @enderror">
+                        <input type="password" name="password" class="form-control" placeholder="Password" required>
+                        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                        @error('password')
+                            <span class="help-block">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-            <!-- Hidden elements for compatibility -->
-            <div style="display: none;">
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" name="remember"> Remember Me
-                    </label>
-                </div>
-                <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-                <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                    <div class="row">
+                        <div class="col-xs-8">
+                            <div class="checkbox icheck">
+                                <label>
+                                    <input type="checkbox" name="remember"> Ingat saya
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-xs-4">
+                            <button type="submit" class="btn btn-primary btn-block btn-flat">Login</button>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
-
-<script>
-function clearForm() {
-    document.getElementById('email').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('email').focus();
-    
-    // Remove error classes if any
-    document.querySelectorAll('.has-error').forEach(function(element) {
-        element.classList.remove('has-error');
-    });
-}
-
-// Enhanced form validation display
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('.form-login');
-    if (form) {
-        // Add custom validation styling
-        form.addEventListener('submit', function(e) {
-            const email = document.getElementById('email');
-            const password = document.getElementById('password');
-            
-            // Reset previous error states
-            document.querySelectorAll('.form-group').forEach(function(group) {
-                group.classList.remove('has-error');
-            });
-            
-            let hasError = false;
-            
-            if (!email.value.trim()) {
-                email.closest('.form-group').classList.add('has-error');
-                hasError = true;
-            }
-            
-            if (!password.value.trim()) {
-                password.closest('.form-group').classList.add('has-error');
-                hasError = true;
-            }
-            
-            if (hasError) {
-                e.preventDefault();
-            }
-        });
-    }
-});
-</script>
 @endsection

@@ -63,6 +63,11 @@ class SettingController extends Controller
 
     public function backup()
     {
+        if (config('desktop.enabled')) {
+            $destination = storage_path('app/galaxy-pos-' . date('Ymd-His') . '-' . bin2hex(random_bytes(3)) . '.galaxypos.zip');
+            app(\App\Services\DesktopBackupService::class)->create($destination);
+            return response()->download($destination)->deleteFileAfterSend(true);
+        }
         try {
             // Jalankan backup database saja (tanpa file)
             Artisan::call('backup:run', ['--only-db' => true]);
@@ -86,6 +91,7 @@ class SettingController extends Controller
 
 public function restore(Request $request)
 {
+    if (config('desktop.enabled')) return back()->with('error', 'Untuk memulihkan cadangan, gunakan menu Data > Pulihkan Cadangan pada aplikasi Windows.');
     $request->validate([
         'sql_file' => 'required|mimes:sql'
     ]);

@@ -14,6 +14,8 @@ yarn-error.log
 /desktop/node_modules/
 /desktop/.staging/
 /desktop/dist/
+/desktop/dist2/
 /desktop/.test-data/
 /desktop/build/VC_redist.x64.exe
 /desktop/build-dist*.log
+/desktop/build-fix*.log

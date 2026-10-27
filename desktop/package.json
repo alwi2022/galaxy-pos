@@ -19,7 +19,7 @@
   "build": {
     "appId": "id.galaxypos.desktop",
     "asar": true,
-    "compression": "store",
+    "compression": "maximum",
     "directories": {"output": "dist", "buildResources": "build"},
     "files": ["main.cjs", "runtime.cjs", "loading.html", "package.json"],
     "extraResources": [{"from": ".staging/backend", "to": "backend"}, {"from": ".staging/php", "to": "php"}],

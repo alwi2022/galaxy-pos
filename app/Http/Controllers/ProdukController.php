@@ -219,6 +219,29 @@ class ProdukController extends Controller
         return back()->with('success', count($rows) . ' produk berhasil diimpor' . ($newCategories ? ', ' . $newCategories . ' kategori baru dibuat' : '') . '.');
     }
 
+    public function export()
+    {
+        $rows = Produk::leftJoin('kategori', 'kategori.id_kategori', 'produk.id_kategori')
+            ->select('produk.*', 'nama_kategori')
+            ->where('produk.id_cabang', auth()->user()->id_cabang)
+            ->get()
+            ->map(fn ($produk) => [
+                $produk->nama_produk,
+                $produk->nama_kategori,
+                $produk->merk,
+                $produk->harga_beli,
+                $produk->harga_jual,
+                $produk->diskon,
+                $produk->stok,
+            ])
+            ->toArray();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ReportExport(
+            ['nama_produk', 'kategori', 'merk', 'harga_beli', 'harga_jual', 'diskon', 'stok'],
+            $rows
+        ), 'export-produk-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
     /**
      * Display the specified resource.
      *

@@ -6,6 +6,7 @@ use App\Models\Member;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class MemberController extends Controller
@@ -18,6 +19,111 @@ class MemberController extends Controller
     public function index()
     {
         return view('member.index');
+    }
+
+    public function importTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ReportExport(
+            ['kode_member', 'nama', 'telepon', 'alamat'],
+            [
+                ['', 'Budi Santoso', '08123456789', 'Jl. Mawar 1'],
+                ['', 'Siti Aminah', '08987654321', ''],
+            ]
+        ), 'template-import-member.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv,txt|max:5120']);
+        $reader = new \App\Imports\MemberImport();
+        \Maatwebsite\Excel\Facades\Excel::import($reader, $request->file('file'));
+
+        $branch = auth()->user()->id_cabang;
+        $rows = [];
+        $errors = [];
+        $seen = [];
+
+        foreach ($reader->rows ?? [] as $index => $row) {
+            $line = $index + 2;
+            $kode = trim((string) ($row['kode_member'] ?? ''));
+            $nama = trim((string) ($row['nama'] ?? ''));
+            $telepon = trim((string) ($row['telepon'] ?? ''));
+            $alamat = trim((string) ($row['alamat'] ?? ''));
+            if ($kode === '' && $nama === '' && $telepon === '' && $alamat === '') {
+                continue;
+            }
+            $rowErrors = [];
+            if ($kode !== '') {
+                if (Member::where('kode_member', $kode)->exists()) {
+                    $rowErrors[] = 'kode_member "' . $kode . '" sudah ada';
+                } elseif (isset($seen[$kode])) {
+                    $rowErrors[] = 'kode_member "' . $kode . '" ganda dengan baris ' . $seen[$kode];
+                }
+            }
+            if ($nama === '' || mb_strlen($nama) > 255) {
+                $rowErrors[] = 'nama wajib diisi (maks. 255 karakter)';
+            }
+            if ($telepon === '' || mb_strlen($telepon) > 20) {
+                $rowErrors[] = 'telepon wajib diisi (maks. 20 karakter)';
+            }
+            if (mb_strlen($alamat) > 255) {
+                $rowErrors[] = 'alamat maks. 255 karakter';
+            }
+            if ($rowErrors) {
+                $errors[] = 'Baris ' . $line . ': ' . implode('; ', $rowErrors) . '.';
+                continue;
+            }
+            if ($kode !== '') {
+                $seen[$kode] = $line;
+            }
+            $rows[] = ['kode_member' => $kode ?: null, 'nama' => $nama, 'telepon' => $telepon, 'alamat' => $alamat ?: null];
+        }
+
+        if (! $rows && ! $errors) {
+            $errors[] = 'File tidak berisi data member. Gunakan template dan isi mulai baris kedua.';
+        }
+        if (count($rows) + count($errors) > 1000) {
+            $errors = ['Maksimal 1.000 member per file.'];
+        }
+        if ($errors) {
+            return back()->with('import_errors', array_slice($errors, 0, 50))->with('import_error_total', count($errors));
+        }
+
+        DB::transaction(function () use ($rows, $branch) {
+            foreach ($rows as $row) {
+                $kode = $row['kode_member'];
+                if (! $kode) {
+                    $next = (int) Member::max('kode_member') + 1;
+                    $kode = tambah_nol_didepan($next, 5);
+                    while (Member::where('kode_member', $kode)->exists()) {
+                        $next++;
+                        $kode = tambah_nol_didepan($next, 5);
+                    }
+                }
+                Member::create([
+                    'kode_member' => $kode,
+                    'nama' => $row['nama'],
+                    'telepon' => $row['telepon'],
+                    'alamat' => $row['alamat'],
+                    'id_cabang' => $branch,
+                ]);
+            }
+        });
+
+        return back()->with('success', count($rows) . ' member berhasil diimpor.');
+    }
+
+    public function export()
+    {
+        $branch = auth()->user()->id_cabang;
+        $rows = Member::where('id_cabang', $branch)->orderBy('kode_member')->get()
+            ->map(fn ($member) => [$member->kode_member, $member->nama, $member->telepon, $member->alamat])
+            ->toArray();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ReportExport(
+            ['kode_member', 'nama', 'telepon', 'alamat'],
+            $rows
+        ), 'export-member-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function data()

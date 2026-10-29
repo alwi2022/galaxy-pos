@@ -23,11 +23,33 @@
         <i class="fa fa-id-card"></i> Cetak Member
     </button>
 
+    <button type="button" data-toggle="modal" data-target="#modal-import" class="btn btn-primary btn-xs btn-flat">
+        <i class="fa fa-upload"></i> Import
+    </button>
+
+    <a href="{{ route('member.export') }}" class="btn btn-default btn-xs btn-flat"><i class="fa fa-download"></i> Export</a>
+
+    <a href="{{ route('member.import_template') }}" class="btn btn-default btn-xs btn-flat"><i class="fa fa-file-excel-o"></i> Unduh Template</a>
+
     <!-- Form tersembunyi untuk cetak -->
     <form method="POST" action="{{ route('member.cetak_member') }}" id="form-cetak" target="_blank" style="display: none;">
         @csrf
     </form>
 </div>
+
+            @if (session('import_errors') || $errors->any())
+            <div class="box-body">
+                <div class="alert alert-danger" style="margin-bottom: 0;">
+                    @if (session('import_errors'))
+                    <strong>Import dibatalkan, tidak ada member yang disimpan.</strong> Perbaiki {{ session('import_error_total') }} baris berikut lalu unggah ulang:
+                    <ul>@foreach (session('import_errors') as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    @if (session('import_error_total') > count(session('import_errors')))<small>Menampilkan {{ count(session('import_errors')) }} dari {{ session('import_error_total') }} error.</small>@endif
+                    @else
+                    <ul style="margin-bottom: 0;">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    @endif
+                </div>
+            </div>
+            @endif
 
             <div class="box-body table-responsive">
                 <form action="" method="post" class="form-member">
@@ -52,6 +74,7 @@
 </div>
 
 @includeIf('member.form')
+@includeIf('member.import')
 @endsection
 
 @push('scripts')

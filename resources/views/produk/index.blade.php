@@ -21,6 +21,7 @@
                     <button onclick="deleteSelected('{{ route('produk.delete_selected') }}')" class="btn btn-danger btn-xs btn-flat"><i class="fa fa-trash"></i> Hapus</button>
                     <button onclick="cetakBarcode('{{ route('produk.cetak_barcode') }}')" class="btn btn-info btn-xs btn-flat"><i class="fa fa-barcode"></i> Cetak Barcode</button>
                     <button type="button" data-toggle="modal" data-target="#modal-import" class="btn btn-primary btn-xs btn-flat"><i class="fa fa-upload"></i> Import</button>
+                    <a href="{{ route('produk.export') }}" class="btn btn-default btn-xs btn-flat"><i class="fa fa-download"></i> Export</a>
                 </div>
             </div>
             @if (session('import_errors') || $errors->any())

@@ -64,6 +64,9 @@ Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite:
         Route::post('/setting/restore', [SettingController::class, 'restore'])->name('setting.restore')->middleware('level:1');
 
         Route::get('/kategori/data', [KategoriController::class, 'data'])->name('kategori.data');
+        Route::get('/kategori/import/template', [KategoriController::class, 'importTemplate'])->name('kategori.import_template');
+        Route::post('/kategori/import', [KategoriController::class, 'import'])->name('kategori.import');
+        Route::get('/kategori/export', [KategoriController::class, 'export'])->name('kategori.export');
         Route::resource('/kategori', KategoriController::class);
 
         Route::get('/produk/data', [ProdukController::class, 'data'])->name('produk.data');
@@ -71,13 +74,20 @@ Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite:
         Route::post('/produk/cetak-barcode', [ProdukController::class, 'cetakBarcode'])->name('produk.cetak_barcode');
         Route::get('/produk/import/template', [ProdukController::class, 'importTemplate'])->name('produk.import_template');
         Route::post('/produk/import', [ProdukController::class, 'import'])->name('produk.import');
+        Route::get('/produk/export', [ProdukController::class, 'export'])->name('produk.export');
         Route::resource('/produk', ProdukController::class)->middleware('cabang');
 
         Route::get('/member/data', [MemberController::class, 'data'])->name('member.data');
         Route::post('/member/cetak-member', [MemberController::class, 'cetakMember'])->name('member.cetak_member');
+        Route::get('/member/import/template', [MemberController::class, 'importTemplate'])->name('member.import_template');
+        Route::post('/member/import', [MemberController::class, 'import'])->name('member.import');
+        Route::get('/member/export', [MemberController::class, 'export'])->name('member.export');
         Route::resource('/member', MemberController::class)->middleware('cabang');
 
         Route::get('/supplier/data', [SupplierController::class, 'data'])->name('supplier.data');
+        Route::get('/supplier/import/template', [SupplierController::class, 'importTemplate'])->name('supplier.import_template');
+        Route::post('/supplier/import', [SupplierController::class, 'import'])->name('supplier.import');
+        Route::get('/supplier/export', [SupplierController::class, 'export'])->name('supplier.export');
         Route::resource('/supplier', SupplierController::class)->middleware('cabang');
 
         Route::get('/pengeluaran/data', [PengeluaranController::class, 'data'])->name('pengeluaran.data');

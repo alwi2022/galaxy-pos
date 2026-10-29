@@ -15,8 +15,26 @@
     <div class="col-lg-12">
         <div class="box">
             <div class="box-header with-border">
-                <button onclick="addForm('{{ route('kategori.store') }}')" class="btn btn-success btn-xs btn-flat"><i class="fa fa-plus-circle"></i> Tambah</button>
+                <div class="btn-group">
+                    <button onclick="addForm('{{ route('kategori.store') }}')" class="btn btn-success btn-xs btn-flat"><i class="fa fa-plus-circle"></i> Tambah</button>
+                    <button type="button" data-toggle="modal" data-target="#modal-import" class="btn btn-primary btn-xs btn-flat"><i class="fa fa-upload"></i> Import</button>
+                    <a href="{{ route('kategori.export') }}" class="btn btn-default btn-xs btn-flat"><i class="fa fa-download"></i> Export</a>
+                    <a href="{{ route('kategori.import_template') }}" class="btn btn-default btn-xs btn-flat"><i class="fa fa-file-excel-o"></i> Unduh Template</a>
+                </div>
             </div>
+            @if (session('import_errors') || $errors->any())
+            <div class="box-body">
+                <div class="alert alert-danger" style="margin-bottom: 0;">
+                    @if (session('import_errors'))
+                    <strong>Import dibatalkan, tidak ada kategori yang disimpan.</strong> Perbaiki {{ session('import_error_total') }} baris berikut lalu unggah ulang:
+                    <ul>@foreach (session('import_errors') as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    @if (session('import_error_total') > count(session('import_errors')))<small>Menampilkan {{ count(session('import_errors')) }} dari {{ session('import_error_total') }} error.</small>@endif
+                    @else
+                    <ul style="margin-bottom: 0;">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    @endif
+                </div>
+            </div>
+            @endif
             <div class="box-body table-responsive">
                 <table class="table table-stiped table-bordered">
                     <thead>
@@ -31,6 +49,7 @@
 </div>
 
 @includeIf('kategori.form')
+@includeIf('kategori.import')
 @endsection
 
 @push('scripts')

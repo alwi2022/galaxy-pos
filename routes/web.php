@@ -44,6 +44,9 @@ Route::group(['middleware' => ['auth', \App\Http\Middleware\AtomicBusinessWrite:
         Route::get('/usaha/export/jurnal', [\App\Http\Controllers\BusinessController::class, 'export'])->name('business.export');
         Route::get('/usaha/export/pajak/{id}/{format}', [\App\Http\Controllers\BusinessController::class, 'taxExport'])->name('business.tax-export');
         Route::get('/usaha/template/bank', [\App\Http\Controllers\BusinessController::class, 'bankTemplate'])->name('business.bank-template');
+        Route::get('/usaha/template/rekening-bank', [\App\Http\Controllers\BusinessController::class, 'bankMasterTemplate'])->name('business.bank-master-template');
+        Route::post('/usaha/rekening-bank/import', [\App\Http\Controllers\BusinessController::class, 'bankMasterImport'])->name('business.bank-master-import');
+        Route::get('/usaha/rekening-bank/export', [\App\Http\Controllers\BusinessController::class, 'bankMasterExport'])->name('business.bank-master-export');
         Route::get('/usaha/detail/{type}/{id}', [\App\Http\Controllers\BusinessController::class, 'details'])->name('business.details');
         Route::post('/usaha/simpan/{action}', [\App\Http\Controllers\BusinessController::class, 'store'])->name('business.store');
         Route::get('/usaha/{module?}', [\App\Http\Controllers\BusinessController::class, 'index'])->name('business.index');

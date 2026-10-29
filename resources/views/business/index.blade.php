@@ -27,6 +27,18 @@
         @unless($financialReport)
         <div class="box-header with-border"><div class="toolbar-inline">@include('business.actions')</div></div>
         @endunless
+        @if ($module === 'rekening-bank' && (session('import_errors') || session('success')))
+        <div class="box-body" style="padding-bottom: 0;">
+            @if (session('import_errors'))
+            <div class="alert alert-danger" style="margin-bottom: 0;"><strong>Import dibatalkan, tidak ada rekening bank yang disimpan.</strong> Perbaiki {{ session('import_error_total') }} baris berikut lalu unggah ulang:
+                <ul>@foreach (session('import_errors') as $error)<li>{{ $error }}</li>@endforeach</ul>
+                @if (session('import_error_total') > count(session('import_errors')))<small>Menampilkan {{ count(session('import_errors')) }} dari {{ session('import_error_total') }} error.</small>@endif
+            </div>
+            @else
+            <div class="alert alert-success" style="margin-bottom: 0;">{{ session('success') }}</div>
+            @endif
+        </div>
+        @endif
         <div class="box-body">
         @if($financialReport && $financialReport !== 'tax')
             @include('business.financial-report')

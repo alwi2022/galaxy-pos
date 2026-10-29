@@ -275,6 +275,107 @@ class BusinessController extends Controller
         }, 'jurnal-' . $d['start'] . '-' . $d['end'] . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
+    public function bankMasterTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ReportExport(
+            ['nama bank', 'no rekening', 'atas nama', 'kota'],
+            [
+                ['BCA Cilegon', '1234567890', 'Toko Galaxy', 'Cilegon'],
+                ['Mandiri', '0987654321', 'Toko Galaxy', 'Serang'],
+            ]
+        ), 'template-import-rekening-bank.xlsx');
+    }
+
+    public function bankMasterImport(Request $request)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv,txt|max:5120']);
+        $branch = (int) auth()->user()->id_cabang;
+        $reader = new \App\Imports\RekeningBankImport();
+        \Maatwebsite\Excel\Facades\Excel::import($reader, $request->file('file'));
+
+        $existing = DB::table('payment_methods')->where('id_cabang', $branch)->where('type', 'bank')
+            ->get(['bank_name', 'account_number'])
+            ->map(fn ($row) => mb_strtolower(trim((string) $row->bank_name) . '|' . trim((string) $row->account_number)))
+            ->flip();
+        $rows = [];
+        $errors = [];
+        $seen = [];
+
+        foreach ($reader->rows ?? [] as $index => $row) {
+            $line = $index + 2;
+            $bankName = trim((string) ($row['nama_bank'] ?? $row['nama bank'] ?? ''));
+            $accountNumber = trim((string) ($row['no_rekening'] ?? $row['no rekening'] ?? ''));
+            $accountHolder = trim((string) ($row['atas_nama'] ?? $row['atas nama'] ?? ''));
+            $city = trim((string) ($row['kota'] ?? ''));
+            if ($bankName === '' && $accountNumber === '' && $accountHolder === '' && $city === '') {
+                continue;
+            }
+            $rowErrors = [];
+            if ($bankName === '' || mb_strlen($bankName) > 60) {
+                $rowErrors[] = 'nama bank wajib diisi (maks. 60 karakter)';
+            }
+            if (mb_strlen($accountNumber) > 40) {
+                $rowErrors[] = 'no rekening maks. 40 karakter';
+            }
+            if (mb_strlen($accountHolder) > 80) {
+                $rowErrors[] = 'atas nama maks. 80 karakter';
+            }
+            if (mb_strlen($city) > 60) {
+                $rowErrors[] = 'kota maks. 60 karakter';
+            }
+            if (! $rowErrors) {
+                $key = mb_strtolower($bankName . '|' . $accountNumber);
+                if (isset($existing[$key])) {
+                    $rowErrors[] = 'rekening "' . trim($bankName . ' ' . $accountNumber) . '" sudah ada';
+                } elseif (isset($seen[$key])) {
+                    $rowErrors[] = 'rekening "' . trim($bankName . ' ' . $accountNumber) . '" ganda dengan baris ' . $seen[$key];
+                }
+            }
+            if ($rowErrors) {
+                $errors[] = 'Baris ' . $line . ': ' . implode('; ', $rowErrors) . '.';
+                continue;
+            }
+            $seen[mb_strtolower($bankName . '|' . $accountNumber)] = $line;
+            $rows[] = ['bank_name' => $bankName, 'account_number' => $accountNumber ?: null, 'account_holder' => $accountHolder ?: null, 'city' => $city ?: null];
+        }
+
+        if (! $rows && ! $errors) {
+            $errors[] = 'File tidak berisi data rekening bank. Gunakan template dan isi mulai baris kedua.';
+        }
+        if (count($rows) + count($errors) > 1000) {
+            $errors = ['Maksimal 1.000 rekening bank per file.'];
+        }
+        if ($errors) {
+            return back()->with('import_errors', array_slice($errors, 0, 50))->with('import_error_total', count($errors));
+        }
+
+        DB::transaction(function () use ($rows, $branch) {
+            foreach ($rows as $row) {
+                app(\App\Services\PaymentMethodService::class)->storeBank($branch, [
+                    'bank_name' => $row['bank_name'],
+                    'account_number' => $row['account_number'],
+                    'account_holder' => $row['account_holder'],
+                    'city' => $row['city'],
+                ]);
+            }
+        });
+
+        return back()->with('success', count($rows) . ' rekening bank berhasil diimpor.');
+    }
+
+    public function bankMasterExport()
+    {
+        $branch = (int) auth()->user()->id_cabang;
+        $rows = DB::table('payment_methods')->where('id_cabang', $branch)->where('type', 'bank')->orderBy('id')->get()
+            ->map(fn ($row) => [$row->bank_name, $row->account_number, $row->account_holder, $row->city, $row->active ? 'Aktif' : 'Nonaktif'])
+            ->toArray();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ReportExport(
+            ['nama bank', 'no rekening', 'atas nama', 'kota', 'status'],
+            $rows
+        ), 'export-rekening-bank-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
     private function bankRules(): array
     {
         return ['bank_name' => 'required|string|max:60', 'account_number' => 'nullable|string|max:40', 'account_holder' => 'nullable|string|max:80', 'address' => 'nullable|string|max:200', 'city' => 'nullable|string|max:60', 'phone' => 'nullable|string|max:30'];

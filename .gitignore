@@ -17,5 +17,10 @@ yarn-error.log
 /desktop/dist2/
 /desktop/.test-data/
 /desktop/build/VC_redist.x64.exe
-/desktop/build-dist*.log
-/desktop/build-fix*.log
+/desktop/dist3/
+/desktop/build-*.log
+
+# Folder kerja/scratch yang tidak termasuk aplikasi
+/.agents/
+/anti-slop/
+/video/
